@@ -80,6 +80,7 @@ namespace vMenuClient
                 DontOpenMenus = !value;
                 if (!value)
                 {
+                    NoClipEnabled = false;
                     MenuController.CloseAllMenus();
                     _ = CancelUserInput();
                     PracticeTimerCheckbox.AsCheckboxItem().Checked = false;
