@@ -541,7 +541,7 @@ namespace vMenuClient
                     return this;
 
                 WMenuItem button;
-                BindSubmenu(submenu, out button, description);
+                BindSubmenu(submenu, out button, description, addEmpty);
                 AddItem(button);
 
                 return this;

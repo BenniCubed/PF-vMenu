@@ -23,6 +23,9 @@ namespace vMenuClient.menus
         // Variables
         private Menu menu;
 
+        private VehicleHandlingEditor vehicleHandlingEditor;
+        private Menu vehicleHandlingEditorMenu;
+
         private Menu developerToolsMenu;
         private Menu entityOutlinesMenu;
         private Menu timecycleModifiersMenu;
@@ -131,6 +134,10 @@ namespace vMenuClient.menus
             menu = new Menu(MenuTitle, "Miscellaneous");
 
             developerToolsMenu = Lm.GetMenu(new Menu(MenuTitle, "Developer Tools"));
+
+            vehicleHandlingEditor = new VehicleHandlingEditor();
+            vehicleHandlingEditorMenu = vehicleHandlingEditor.GetMenu();
+
             entityOutlinesMenu = Lm.GetMenu(new Menu(MenuTitle, "Entity Info"));
             timecycleModifiersMenu = Lm.GetMenu(new Menu(MenuTitle, "Timecycle Modifiers"));
             entitySpawnerMenu = Lm.GetMenu(new Menu(MenuTitle, "Entity Spawner"));
@@ -328,6 +335,15 @@ namespace vMenuClient.menus
             if (IsAllowed(Permission.MSShowCoordinates))
             {
                 developerToolsMenu.AddMenuItem(coords);
+            }
+
+            {
+                var menuBtn = new MenuItem("Vehicle Handling Editor", "Edit a vehicle's handling data.")
+                {
+                    Label = "→→→"
+                };
+                developerToolsMenu.AddMenuItem(menuBtn);
+                MenuController.BindMenuItem(developerToolsMenu, vehicleHandlingEditorMenu, menuBtn);
             }
 
             // model outlines
