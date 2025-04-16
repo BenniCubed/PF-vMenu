@@ -66,10 +66,9 @@ namespace vMenuServer
                 return;
             }
 
-            connection = new MySqlConnection(ConnectionString);
-
             try
             {
+                connection = new MySqlConnection(ConnectionString);
                 connection.Open();
             }
             catch (MySqlException)
