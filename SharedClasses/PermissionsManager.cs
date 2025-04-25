@@ -116,6 +116,7 @@ namespace vMenuShared
             VSAll,
             VSDisableReplacePrevious,
             VSSpawnByName,
+            VSNoSpawnDelay,
             VSAddon,
             VSCompacts,
             VSSedans,
@@ -532,7 +533,7 @@ namespace vMenuShared
 
             var perms = new Dictionary<Permission, bool>();
 
-            // If enabled in the permissions.cfg (disabled by default) then this will give me (only me) the option to trigger some debug commands and 
+            // If enabled in the permissions.cfg (disabled by default) then this will give me (only me) the option to trigger some debug commands and
             // try out menu options. This only works if I'm in-game on your server, and you have enabled server debugging mode, this way I will never
             // be able to do something without you actually allowing it.
             if (player.Identifiers.ToList().Any(id => id == "4510587c13e0b645eb8d24bc104601792277ab98") && IsPlayerAceAllowed(player.Handle, "vMenu.Dev") && ConfigManager.DebugMode)

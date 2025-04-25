@@ -1360,7 +1360,7 @@ namespace vMenuClient
         public static async Task<int> SpawnVehicle(uint vehicleHash, bool spawnInside, bool replacePrevious, bool skipLoad, VehicleInfo vehicleInfo, string saveName = null, float x = 0f, float y = 0f, float z = 0f, float heading = -1f, bool despawnable = false)
         {
             int currentTime = Game.GameTime;
-            if (currentTime - lastSpawnTime < GetSettingsInt(Setting.vmenu_vehicle_spawn_delay))
+            if (currentTime - lastSpawnTime < GetSettingsInt(Setting.vmenu_vehicle_spawn_delay) && !IsAllowed(Permission.VSNoSpawnDelay))
             {
                 if (!spawnedTooFastWarningShown)
                 {
