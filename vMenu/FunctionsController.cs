@@ -27,6 +27,22 @@ namespace vMenuClient
     /// This class manages all things that need to be done every tick based on
     /// checkboxes/things changing in any of the (sub) menus.
     /// </summary>
+    public enum NewLicensePlateStyle
+    {
+        BlueOnWhite2,
+        YellowOnBlack,
+        YellowOnBlue,
+        BlueOnWhite1,
+        BlueOnWhite3,
+        NorthYankton,
+        plate_mod_01,
+        plate_mod_02,
+        plate_mod_03,
+        plate_mod_04,
+        plate_mod_05,
+        plate_mod_06,
+        plate_mod_07
+    }
     class FunctionsController : BaseScript
     {
         private int LastVehicle = 0;
@@ -481,6 +497,27 @@ namespace vMenuClient
                                     break;
                                 case LicensePlateStyle.NorthYankton:
                                     listItem.ListIndex = 5;
+                                    break;
+                                case (LicensePlateStyle)NewLicensePlateStyle.plate_mod_01:
+                                    listItem.ListIndex = 6;
+                                    break;
+                                case (LicensePlateStyle)NewLicensePlateStyle.plate_mod_02:
+                                    listItem.ListIndex = 7;
+                                    break;
+                                case (LicensePlateStyle)NewLicensePlateStyle.plate_mod_03:
+                                    listItem.ListIndex = 8;
+                                    break;
+                                case (LicensePlateStyle)NewLicensePlateStyle.plate_mod_04:
+                                    listItem.ListIndex = 9;
+                                    break;
+                                case (LicensePlateStyle)NewLicensePlateStyle.plate_mod_05:
+                                    listItem.ListIndex = 10;
+                                    break;
+                                case (LicensePlateStyle)NewLicensePlateStyle.plate_mod_06:
+                                    listItem.ListIndex = 11;
+                                    break;
+                                case (LicensePlateStyle)NewLicensePlateStyle.plate_mod_07:
+                                    listItem.ListIndex = 12;
                                     break;
                                 default:
                                     break;
@@ -3557,6 +3594,13 @@ namespace vMenuClient
                     {2, "plate04"},
                     {1, "plate05"},
                     {5, "yankton_plate"},
+                    {6, "plate_mod_01"},
+                    {7, "plate_mod_02"},
+                    {8, "plate_mod_03"},
+                    {9, "plate_mod_04"},
+                    {10, "plate_mod_05"},
+                    {11, "plate_mod_06"},
+                    {12, "plate_mod_07"},
                 };
 
                 foreach ( var Plates in new Dictionary<int, string>(PlateList))

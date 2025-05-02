@@ -57,6 +57,13 @@ namespace vMenuClient.menus
         private string plate04;
         private string plate03;
         private string plate02;
+        private string plate_mod_01;
+        private string plate_mod_02;
+        private string plate_mod_03;
+        private string plate_mod_04;
+        private string plate_mod_05;
+        private string plate_mod_06;
+        private string plate_mod_07;
         #endregion
 
         /// <summary>
@@ -95,6 +102,13 @@ namespace vMenuClient.menus
                 {3, "plate04"},
                 {4, "plate05"},
                 {5, "yankton_plate"},
+                {6, "plate_mod_01"},
+                {7, "plate_mod_02"},
+                {8, "plate_mod_03"},
+                {9, "plate_mod_04"},
+                {10, "plate_mod_05"},
+                {11, "plate_mod_06"},
+                {12, "plate_mod_07"},
             };
             foreach ( var Plates in new Dictionary<int, string>(PlateList))
             {
@@ -168,10 +182,87 @@ namespace vMenuClient.menus
                             plate06 = "North Yankton";
                         }
                     }
-                }
+                    else if (Plates.Key == 6)
+					{
+    					if (!(data2.vMenuPlateName == "" || data2.vMenuPlateName == null))
+    					{
+        					plate_mod_01 = data2.vMenuPlateName;
+    					}
+    					else
+    					{
+        					plate_mod_01 = "eCola";
+    					}
+					}
+					else if (Plates.Key == 7)
+					{
+    					if (!(data2.vMenuPlateName == "" || data2.vMenuPlateName == null))
+    					{
+        					plate_mod_02 = data2.vMenuPlateName;
+    					}
+    					else
+    					{
+        					plate_mod_02 = "Las Venturas";
+    					}
+					}
+					else if (Plates.Key == 8)
+					{
+    					if (!(data2.vMenuPlateName == "" || data2.vMenuPlateName == null))
+    					{
+        					plate_mod_03 = data2.vMenuPlateName;
+    					}
+    					else
+    					{
+        					plate_mod_03 = "Liberty City";
+    					}
+					}
+					else if (Plates.Key == 9)
+					{
+    					if (!(data2.vMenuPlateName == "" || data2.vMenuPlateName == null))
+    					{
+        					plate_mod_04 = data2.vMenuPlateName;
+    					}
+    					else
+    					{
+        					plate_mod_04 = "LS Car Meet";
+    					}
+					}
+					else if (Plates.Key == 10)
+					{
+    					if (!(data2.vMenuPlateName == "" || data2.vMenuPlateName == null))
+    					{
+        					plate_mod_05 = data2.vMenuPlateName;
+    					}
+    					else
+    					{
+        					plate_mod_05 = "LS Panic";
+    					}
+					}
+					else if (Plates.Key == 11)
+					{
+    					if (!(data2.vMenuPlateName == "" || data2.vMenuPlateName == null))
+    					{
+        					plate_mod_06 = data2.vMenuPlateName;
+    					}
+    					else
+    					{
+        					plate_mod_06 = "LS Pounders";
+    					}
+					}
+					else if (Plates.Key == 12)
+					{
+    					if (!(data2.vMenuPlateName == "" || data2.vMenuPlateName == null))
+    					{
+        					plate_mod_07 = data2.vMenuPlateName;
+    					}
+    					else
+    					{
+        					plate_mod_07 = "Sprunk";
+    					}
+					}
+            	}
             }
 
-            var licensePlates = new List<string> { plate01, plate02, plate03, plate04, plate05, plate06 };
+            var licensePlates = new List<string> { plate01, plate02, plate03, plate04, plate05, plate06, plate_mod_01, plate_mod_02, plate_mod_03, plate_mod_04, plate_mod_05, plate_mod_06, plate_mod_07 };
             var setLicensePlateType = new MenuListItem("License Plate Type", licensePlates, 0, "Select the ~b~license plate type~s~.");
             #endregion
 
@@ -294,8 +385,29 @@ namespace vMenuClient.menus
                             case 5:
                                 veh.Mods.LicensePlateStyle = LicensePlateStyle.NorthYankton;
                                 break;
-                            default:
-                                break;
+                            case 6:
+    							veh.Mods.LicensePlateStyle = (LicensePlateStyle)NewLicensePlateStyle.plate_mod_01;
+    							break;
+							case 7:
+    							veh.Mods.LicensePlateStyle = (LicensePlateStyle)NewLicensePlateStyle.plate_mod_02;
+    							break;
+							case 8:
+    							veh.Mods.LicensePlateStyle = (LicensePlateStyle)NewLicensePlateStyle.plate_mod_03;
+    							break;
+							case 9:
+    							veh.Mods.LicensePlateStyle = (LicensePlateStyle)NewLicensePlateStyle.plate_mod_04;
+    							break;
+							case 10:
+    							veh.Mods.LicensePlateStyle = (LicensePlateStyle)NewLicensePlateStyle.plate_mod_05;
+    							break;
+							case 11:
+    							veh.Mods.LicensePlateStyle = (LicensePlateStyle)NewLicensePlateStyle.plate_mod_06;
+    							break;
+							case 12:
+    							veh.Mods.LicensePlateStyle = (LicensePlateStyle)NewLicensePlateStyle.plate_mod_07;
+    							break;
+							default:
+    							break;
                         }
                     }
                 }
@@ -1419,8 +1531,29 @@ namespace vMenuClient.menus
                             case LicensePlateStyle.NorthYankton:
                                 listItem.ListIndex = 5;
                                 break;
-                            default:
-                                break;
+                            case (LicensePlateStyle)NewLicensePlateStyle.plate_mod_01:
+    							listItem.ListIndex = 6;
+    							break;
+							case (LicensePlateStyle)NewLicensePlateStyle.plate_mod_02:
+    							listItem.ListIndex = 7;
+    							break;
+							case (LicensePlateStyle)NewLicensePlateStyle.plate_mod_03:
+    							listItem.ListIndex = 8;
+    							break;
+							case (LicensePlateStyle)NewLicensePlateStyle.plate_mod_04:
+    							listItem.ListIndex = 9;
+    							break;
+							case (LicensePlateStyle)NewLicensePlateStyle.plate_mod_05:
+    							listItem.ListIndex = 10;
+    							break;
+							case (LicensePlateStyle)NewLicensePlateStyle.plate_mod_06:
+    							listItem.ListIndex = 11;
+    							break;
+							case (LicensePlateStyle)NewLicensePlateStyle.plate_mod_07:
+    							listItem.ListIndex = 12;
+    							break;
+							default:
+    							break;
                         }
                     }
                 });
