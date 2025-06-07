@@ -40,7 +40,7 @@ namespace vMenuClient.menus
             Mph
         }
 
-        public SpeedDisplayState SpeedDisplay { get; private set; } = (SpeedDisplayState)UserDefaults.MiscSpeedDisplay;
+        public SpeedDisplayState SpeedDisplay { get; private set; } = IsAllowed(Permission.MSSpeed) ? (SpeedDisplayState)UserDefaults.MiscSpeedDisplay : SpeedDisplayState.Off;
         public bool ShowCoordinates { get; private set; } = false;
         public bool HideHud { get; private set; } = false;
         public bool HideRadar { get; private set; } = false;
@@ -63,7 +63,7 @@ namespace vMenuClient.menus
         public bool MiscRespawnDefaultCharacter { get; private set; } = UserDefaults.MiscRespawnDefaultCharacter;
         public bool RestorePlayerAppearance { get; private set; } = UserDefaults.MiscRestorePlayerAppearance;
         public bool RestorePlayerWeapons { get; private set; } = UserDefaults.MiscRestorePlayerWeapons;
-        public bool DrawTimeOnScreen { get; internal set; } = UserDefaults.MiscShowTime;
+        public bool DrawTimeOnScreen { get; internal set; } = UserDefaults.MiscShowTime && IsAllowed(Permission.MSTime);
         public bool MiscRightAlignMenu { get; private set; } = UserDefaults.MiscRightAlignMenu;
         public bool MiscDisablePrivateMessages { get; private set; } = UserDefaults.MiscDisablePrivateMessages;
         public bool MiscDisableControllerSupport { get; private set; } = UserDefaults.MiscDisableControllerSupport;
@@ -675,8 +675,15 @@ namespace vMenuClient.menus
             MenuController.BindMenuItem(menu, hudMenu, hudMenuBtn);
 
             hudMenu.AddMenuItem(alignMenu);
-            hudMenu.AddMenuItem(drawTime);
-            hudMenu.AddMenuItem(speed);
+            if (IsAllowed(Permission.MSTime))
+            {
+                hudMenu.AddMenuItem(drawTime);
+            }
+            if (IsAllowed(Permission.MSSpeed))
+            {
+                hudMenu.AddMenuItem(speed);
+            }
+
             if (!GetSettingsBool(Setting.vmenu_disable_radar_control))
             {
                 hudMenu.AddMenuItem(hideRadar);

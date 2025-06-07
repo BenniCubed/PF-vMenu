@@ -352,6 +352,8 @@ namespace vMenuShared
             // Misc Settings
             #region misc settings
             MSAll,
+            MSSpeed,
+            MSTime,
             MSClearArea,
             MSTeleportToWp,
             MSTeleportToCoord,
