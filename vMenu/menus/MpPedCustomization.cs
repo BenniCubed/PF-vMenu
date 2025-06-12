@@ -480,7 +480,20 @@ namespace vMenuClient.menus
             #endregion
 
             #region clothing options menu
-            var clothingCategoryNames = new string[12] { "Unused (head)", "Masks", "Unused (hair)", "Upper Body", "Lower Body", "Bags & Parachutes", "Shoes", "Scarfs & Chains", "Shirt & Accessory", "Body Armor & Accessory 2", "Badges & Logos", "Shirt Overlay & Jackets" };
+            var clothingCategoryNames = new string[12] {
+                "Head (UNUSED)",
+                "Masks & Facial Hair",
+                "Hair (UNUSED)",
+                "Torso",
+                "Legs & Pants",
+                "Carried Items",
+                "Feet & Shoes",
+                "Slot 1 Accessories",
+                "Slot 2 Accessories",
+                "Slot 3 Accessories",
+                "Slot 4 Accessories",
+                "Jackets & Hoodies"
+            };
             for (var i = 0; i < 12; i++)
             {
                 if (i is not 0 and not 2)
@@ -493,7 +506,7 @@ namespace vMenuClient.menus
                     var items = new List<string>();
                     for (var x = 0; x < maxDrawables; x++)
                     {
-                        items.Add($"Drawable #{x} (of {maxDrawables})");
+                        items.Add($"Item #{x} (of {maxDrawables})");
                     }
 
                     var maxTextures = GetNumberOfPedTextureVariations(Game.PlayerPed.Handle, i, currentVariationIndex);
@@ -1263,7 +1276,7 @@ namespace vMenuClient.menus
                 var maxTextures = GetNumberOfPedTextureVariations(Game.PlayerPed.Handle, componentIndex, newSelectionIndex);
 
                 currentCharacter.DrawableVariations.clothes[componentIndex] = new KeyValuePair<int, int>(newSelectionIndex, newTextureIndex);
-                listItem.Description = $"Select a drawable using the arrow keys and press ~o~enter~s~ to cycle through all available textures. Currently selected texture: #{newTextureIndex + 1} (of {maxTextures}).";
+                listItem.Description = $"Select an item using the arrow keys and press ~o~enter~s~ to cycle through all available textures. Currently selected texture: #{newTextureIndex + 1} (of {maxTextures}).";
             };
 
             clothesMenu.OnListItemSelect += (sender, listItem, listIndex, realIndex) =>
@@ -1282,7 +1295,7 @@ namespace vMenuClient.menus
                 var maxTextures = GetNumberOfPedTextureVariations(Game.PlayerPed.Handle, componentIndex, listIndex);
 
                 currentCharacter.DrawableVariations.clothes[componentIndex] = new KeyValuePair<int, int>(listIndex, newTextureIndex);
-                listItem.Description = $"Select a drawable using the arrow keys and press ~o~enter~s~ to cycle through all available textures. Currently selected texture: #{newTextureIndex + 1} (of {maxTextures}).";
+                listItem.Description = $"Select an item using the arrow keys and press ~o~enter~s~ to cycle through all available textures. Currently selected texture: #{newTextureIndex + 1} (of {maxTextures}).";
             };
             #endregion
 
