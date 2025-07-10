@@ -10,10 +10,9 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\SharedClasses\ConfigManager.cs" Link="ConfigManager.cs" />
-    <Compile Include="..\SharedClasses\KeyValueStore.cs" Link="KeyValueStore.cs" />
-    <Compile Include="..\SharedClasses\PermissionsManager.cs" Link="PermissionsManager.cs" />
-    <Compile Include="..\SharedClasses\TimeWeatherCommon.cs" Link="TimeWeatherCommon.cs" />
+    <Compile Include="..\SharedClasses\**\*.cs">
+      <Link>notimportant</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

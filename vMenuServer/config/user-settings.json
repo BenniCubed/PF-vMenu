@@ -1,0 +1,10 @@
+[
+    {
+        "name": "Speedometer Unit",
+        "description": "Unit for the speedometer",
+        "key": "speed_unit",
+        "values": ["km/h", "mph"],
+        "valueKeys": ["kmh", "mph"],
+        "defaultValueKey": "kmh"
+    }
+]

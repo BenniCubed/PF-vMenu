@@ -1,0 +1,12 @@
+{
+    "Default": {
+        "ConnectionStringConvar": "vmenu_db_connection_string",
+        "Table": "vmenu"
+    },
+    "UserSettings": {
+        "ConnectionStringConvar": "vmenu_db_connection_string",
+        "Type": "Columnar",
+        "Table": "user_settings",
+        "LicensePrefix": true
+    }
+}
