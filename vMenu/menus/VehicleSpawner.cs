@@ -79,8 +79,9 @@ namespace vMenuClient.menus
         }
 
         public bool SpawnInVehicle { get; private set; } = UserDefaults.VehicleSpawnerSpawnInside;
+        public bool SpawnUpgraded { get; private set; } = IsAllowed(Permission.VOMod) ? UserDefaults.VehicleSpawnerSpawnUpgraded : false;
         public bool ReplaceVehicle { get; private set; } = UserDefaults.VehicleSpawnerReplacePrevious;
-        public bool SpawnNpcLike { get; private set; } = UserDefaults.VehicleSpawnerSpawnNpcLike;
+        public bool SpawnDestructible { get; private set; } = UserDefaults.VehicleSpawnerSpawnDestructible;
 
         private List<VehicleData.VehicleModelInfo> allowedVehiclesList;
 
@@ -98,7 +99,11 @@ namespace vMenuClient.menus
                 Label = $"~c~({vi.Shortname})~s~",
                 ItemData = vi
             }.ToWrapped();
-            btn.Selected += async (_s, _args) => await SpawnVehicle(vi.Shortname, SpawnInVehicle, ReplaceVehicle, SpawnNpcLike);
+        btn.Selected += async (_s, _args) => await SpawnVehicle(
+            vi.Shortname,
+            SpawnInVehicle,
+            ReplaceVehicle, destructible: SpawnDestructible,
+            upgraded: SpawnUpgraded);
 
             return btn;
         }
@@ -325,7 +330,12 @@ namespace vMenuClient.menus
                 return;
             }
             var veh = randomVehiclesList[random.Next(0, randomVehiclesList.Count)];
-            await SpawnVehicle(veh, SpawnInVehicle, ReplaceVehicle, SpawnNpcLike);
+            await SpawnVehicle(
+                veh,
+                SpawnInVehicle,
+                ReplaceVehicle,
+                destructible: SpawnDestructible,
+                upgraded: SpawnUpgraded);
         }
 
         private List<string> randomSportyVehiclesList;
@@ -337,7 +347,12 @@ namespace vMenuClient.menus
                 return;
             }
             var veh = randomSportyVehiclesList[random.Next(0, randomSportyVehiclesList.Count)];
-            await SpawnVehicle(veh, SpawnInVehicle, ReplaceVehicle, SpawnNpcLike);
+            await SpawnVehicle(
+                veh,
+                SpawnInVehicle,
+                ReplaceVehicle,
+                destructible: SpawnDestructible,
+                upgraded: SpawnUpgraded);
         }
 
 
@@ -379,7 +394,7 @@ namespace vMenuClient.menus
             if (IsAllowed(Permission.VSSpawnByName))
             {
                 var spawnVehicleByName = new MenuItem("Spawn Vehicle By Model Name", "Spawn a vehicle by its exact model name.").ToWrapped();
-                spawnVehicleByName.Selected += async (_s, _args) => await SpawnVehicle("custom", SpawnInVehicle, ReplaceVehicle, SpawnNpcLike);
+                spawnVehicleByName.Selected += async (_s, _args) => await SpawnVehicle("custom", SpawnInVehicle, ReplaceVehicle, SpawnDestructible);
 
                 menu.AddItem(spawnVehicleByName);
             }
@@ -441,9 +456,14 @@ namespace vMenuClient.menus
 
                 var spawnInVeh = new MenuCheckboxItem("Spawn Inside Vehicle", "This will teleport you into the vehicle when you spawn it.", SpawnInVehicle);
                 var replacePrev = new MenuCheckboxItem("Replace Previous Vehicle", "This will automatically delete your previously spawned vehicle when you spawn a new vehicle.", ReplaceVehicle);
-                var spawnNpcLike = new MenuCheckboxItem("Spawn NPC-Like Vehicle", "This will make the spawned vehicle behave more like an NPC vehicle. It will explode on heavy impact and despawn when too far away.", SpawnNpcLike);
+                var spawnUpgraded = new MenuCheckboxItem("Spawn Upgraded Vehicle", "This will spawn the vehicle with performance upgrades applied.", SpawnUpgraded);
+                var spawnDestructible = new MenuCheckboxItem("Spawn Destructible Vehicle", "This will make it so the spawned vehicle can explode on impact. As a side-effect, it will also despawn when too far away.", SpawnDestructible);
 
                 spawnOptionsMenu.AddMenuItem(spawnInVeh);
+                if (IsAllowed(Permission.VOMod))
+                {
+                    spawnOptionsMenu.AddMenuItem(spawnUpgraded);
+                }
                 if (IsAllowed(Permission.VSDisableReplacePrevious))
                 {
                     spawnOptionsMenu.AddMenuItem(replacePrev);
@@ -453,7 +473,7 @@ namespace vMenuClient.menus
                     replacePrev = null;
                     ReplaceVehicle = true;
                 }
-                spawnOptionsMenu.AddMenuItem(spawnNpcLike);
+                spawnOptionsMenu.AddMenuItem(spawnDestructible);
 
                 menu.AddSubmenu(spawnOptionsMenu);
 
@@ -463,13 +483,17 @@ namespace vMenuClient.menus
                     {
                         SpawnInVehicle = _checked;
                     }
+                    else if (item == spawnUpgraded)
+                    {
+                        SpawnUpgraded = _checked;
+                    }
                     else if (item == replacePrev)
                     {
                         ReplaceVehicle = _checked;
                     }
-                    else if (item == spawnNpcLike)
+                    else if (item == spawnDestructible)
                     {
-                        SpawnNpcLike = _checked;
+                        SpawnDestructible = _checked;
                     }
                 };
             }

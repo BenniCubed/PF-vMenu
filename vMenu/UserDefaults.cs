@@ -182,10 +182,16 @@ namespace vMenuClient
             set { SetSavedSettingsBool("vehicleSpawnerReplacePrevious", value); }
         }
 
-        public static bool VehicleSpawnerSpawnNpcLike
+        public static bool VehicleSpawnerSpawnDestructible
         {
-            get { return GetSettingsBool("vehicleSpawnerSpawnNpcLike"); }
-            set { SetSavedSettingsBool("vehicleSpawnerSpawnNpcLike", value); }
+            get { return GetSettingsBool("vehicleSpawnerSpawnDestructible"); }
+            set { SetSavedSettingsBool("vehicleSpawnerSpawnDestructible", value); }
+        }
+
+        public static bool VehicleSpawnerSpawnUpgraded
+        {
+            get { return GetSettingsBool("vehicleSpawnerSpawnUpgraded"); }
+            set { SetSavedSettingsBool("vehicleSpawnerSpawnUpgraded", value); }
         }
         #endregion
 
@@ -394,6 +400,7 @@ namespace vMenuClient
                     "miscDeathNotifications" or
                     "miscJoinQuitNotifications" or
                     "vehicleSpawnerSpawnInside" or
+                    "vehicleSpawnerSpawnUpgraded" or
                     "vehicleSpawnerReplacePrevious" or
                     "neverWanted" or
                     "autoEquipParachuteWhenInPlane" or
@@ -622,6 +629,12 @@ namespace vMenuClient
             {
                 VehicleSpawnerReplacePrevious = MainMenu.VehicleSpawnerMenu.ReplaceVehicle;
                 prefs.Add("vehicleSpawnerReplacePrevious", VehicleSpawnerReplacePrevious);
+
+                VehicleSpawnerSpawnDestructible = MainMenu.VehicleSpawnerMenu.SpawnDestructible;
+                prefs.Add("vehicleSpawnerSpawnDestructible", VehicleSpawnerSpawnDestructible);
+
+                VehicleSpawnerSpawnUpgraded = MainMenu.VehicleSpawnerMenu.SpawnUpgraded;
+                prefs.Add("vehicleSpawnerSpawnUpgraded", VehicleSpawnerSpawnUpgraded);
 
                 VehicleSpawnerSpawnInside = MainMenu.VehicleSpawnerMenu.SpawnInVehicle;
                 prefs.Add("vehicleSpawnerSpawnInside", VehicleSpawnerSpawnInside);

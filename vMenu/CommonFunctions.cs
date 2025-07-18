@@ -1286,7 +1286,7 @@ namespace vMenuClient
         /// <param name="vehicleName">Vehicle model name. If "custom" the user will be asked to enter a model name.</param>
         /// <param name="spawnInside">Warp the player inside the vehicle after spawning.</param>
         /// <param name="replacePrevious">Replace the previous vehicle of the player.</param>
-        public static async Task<int> SpawnVehicle(string vehicleName = "custom", bool spawnInside = false, bool replacePrevious = false, bool despawnable = false)
+        public static async Task<int> SpawnVehicle(string vehicleName = "custom", bool spawnInside = false, bool replacePrevious = false, bool destructible = false, bool upgraded = false)
         {
             if (vehicleName == "custom")
             {
@@ -1298,7 +1298,7 @@ namespace vMenuClient
                     // Convert it into a model hash.
                     var model = (uint)GetHashKey(result);
                     return await SpawnVehicle(vehicleHash: model, spawnInside: spawnInside, replacePrevious: replacePrevious, skipLoad: false, vehicleInfo: new VehicleInfo(),
-                        saveName: null, despawnable: despawnable);
+                        saveName: null, destructible: destructible, upgraded: upgraded);
                 }
                 // Result was invalid.
                 else
@@ -1308,7 +1308,7 @@ namespace vMenuClient
                 }
             }
             return await SpawnVehicle(vehicleHash: (uint)GetHashKey(vehicleName), spawnInside: spawnInside, replacePrevious: replacePrevious, skipLoad: false,
-                vehicleInfo: new VehicleInfo(), saveName: null, despawnable: despawnable);
+                vehicleInfo: new VehicleInfo(), saveName: null, destructible: destructible, upgraded: upgraded);
         }
         #endregion
 
@@ -1324,12 +1324,14 @@ namespace vMenuClient
                 return;
             }
 
-            var despawnable = false;
+            var destructible = false;
+            var upgraded = false;
             if (MainMenu.VehicleSpawnerMenu is VehicleSpawner vehicleSpawner)
             {
                 spawnInside = spawnInside ?? vehicleSpawner.SpawnInVehicle;
                 replacePrevious = replacePrevious ?? vehicleSpawner.ReplaceVehicle;
-                despawnable = vehicleSpawner.SpawnNpcLike;
+                destructible = vehicleSpawner.SpawnDestructible;
+                upgraded = vehicleSpawner.SpawnUpgraded;
             }
 
             await SpawnVehicle(
@@ -1339,13 +1341,75 @@ namespace vMenuClient
                 skipLoad: false,
                 vehicleInfo: LastVehicleInfo ?? new VehicleInfo(),
                 saveName: LastVehicleInfo.HasValue ? "." : "",
-                despawnable: despawnable);
+                destructible: destructible,
+                upgraded: upgraded);
 
         }
         #endregion
 
         private static int lastSpawnTime = 0;
         private static bool spawnedTooFastWarningShown = false;
+
+        private static int NumVehicleMods(Vehicle vehicle, VehicleModType modType)
+        {
+            return GetNumVehicleMods(vehicle.Handle, (int)modType);
+        }
+
+        private static bool VehicleHasChangeableMod(Vehicle vehicle, VehicleModType modType)
+        {
+            return NumVehicleMods(vehicle, modType) > 0;
+        }
+
+        private static void FullyUpgradeVehicleMod(Vehicle vehicle, VehicleModType modType)
+        {
+            if (!VehicleHasChangeableMod(vehicle, modType))
+            {
+                return;
+            }
+
+            for (int i = 0; i < vehicle.Mods[modType].ModCount; i++)
+            {
+                SetVehicleMod(vehicle.Handle, (int)modType, i, false);
+            }
+        }
+
+        private static void FullyUpgradeSuspensionIfBeneficial(Vehicle vehicle)
+        {
+            if ((GetVehicleHandlingInt(vehicle.Handle, "CCarHandlingData", "strAdvancedFlags") & 0x10000000) != 0)
+            {
+                FullyUpgradeVehicleMod(vehicle, VehicleModType.Suspension);
+            }
+        }
+
+        private static void ApplyNonStockSpoiler(Vehicle vehicle)
+        {
+            if (!VehicleHasChangeableMod(vehicle, VehicleModType.Spoilers))
+            {
+                return;
+            }
+
+            var spoilerMod = GetVehicleMod(vehicle.Handle, (int)VehicleModType.Spoilers);
+            if (spoilerMod != -1)
+            {
+                return;
+            }
+
+            SetVehicleMod(vehicle.Handle, (int)VehicleModType.Spoilers, 0, false);
+        }
+
+        private async static Task FullyUpgradeVehicle(Vehicle vehicle, int delay = 500)
+        {
+            await Delay(delay);
+
+            vehicle.Mods.InstallModKit();
+            ApplyNonStockSpoiler(vehicle);
+            FullyUpgradeVehicleMod(vehicle, VehicleModType.Engine);
+            FullyUpgradeVehicleMod(vehicle, VehicleModType.Brakes);
+            FullyUpgradeVehicleMod(vehicle, VehicleModType.Transmission);
+            FullyUpgradeSuspensionIfBeneficial(vehicle);
+            FullyUpgradeVehicleMod(vehicle, VehicleModType.Armor);
+            ToggleVehicleMod(vehicle.Handle, 18, true); // Turbo
+        }
 
         #region Main Spawn Vehicle Function
         /// <summary>
@@ -1357,7 +1421,7 @@ namespace vMenuClient
         /// <param name="skipLoad">Does not attempt to load the vehicle, but will spawn it right a way.</param>
         /// <param name="vehicleInfo">All information needed for a saved vehicle to re-apply all mods.</param>
         /// <param name="saveName">Used to get/set info about the saved vehicle data.</param>
-        public static async Task<int> SpawnVehicle(uint vehicleHash, bool spawnInside, bool replacePrevious, bool skipLoad, VehicleInfo vehicleInfo, string saveName = null, float x = 0f, float y = 0f, float z = 0f, float heading = -1f, bool despawnable = false)
+        public static async Task<int> SpawnVehicle(uint vehicleHash, bool spawnInside, bool replacePrevious, bool skipLoad, VehicleInfo vehicleInfo, string saveName = null, float x = 0f, float y = 0f, float z = 0f, float heading = -1f, bool destructible = false, bool upgraded = false)
         {
             int currentTime = Game.GameTime;
             if (currentTime - lastSpawnTime < GetSettingsInt(Setting.vmenu_vehicle_spawn_delay) && !IsAllowed(Permission.VSNoSpawnDelay))
@@ -1516,6 +1580,10 @@ namespace vMenuClient
             {
                 ApplyVehicleModsDelayed(vehicle, vehicleInfo, 500);
             }
+            else if (upgraded)
+            {
+                _ = FullyUpgradeVehicle(vehicle);
+            }
 
             // Set the previous vehicle to the new vehicle.
             _previousVehicle = vehicle;
@@ -1525,7 +1593,7 @@ namespace vMenuClient
                 // workaround of retarded feature above:
                 if (spawnInside || IsAllowed(Permission.BPCarlaunch))
                 {
-                SetVehicleForwardSpeed(vehicle.Handle, speed);
+                    SetVehicleForwardSpeed(vehicle.Handle, speed);
                 }
             }
             vehicle.CurrentRPM = rpm;
@@ -1540,7 +1608,7 @@ namespace vMenuClient
             // Discard the model.
             SetModelAsNoLongerNeeded(vehicleHash);
 
-            if (despawnable)
+            if (destructible)
             {
                 int handle = vehicle.Handle;
                 SetVehicleAsNoLongerNeeded(ref handle);

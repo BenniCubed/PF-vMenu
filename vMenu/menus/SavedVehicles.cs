@@ -118,7 +118,8 @@ namespace vMenuClient.menus
                             false,
                             vehicleInfo: selectedVehicle.Item2,
                             saveName: selectedVehicle.Item1,
-                            despawnable: MainMenu.VehicleSpawnerMenu.SpawnNpcLike);
+                            destructible: MainMenu.VehicleSpawnerMenu.SpawnDestructible,
+                            upgraded: false);
                     }
                     else
                     {
@@ -129,7 +130,8 @@ namespace vMenuClient.menus
                             false,
                             vehicleInfo: selectedVehicle.Item2,
                             saveName: selectedVehicle.Item1,
-                            despawnable: true);
+                            destructible: false,
+                            upgraded: false);
                     }
                 };
             }
