@@ -2548,6 +2548,26 @@ namespace vMenuClient
             if (!await MainMenu.CheckVMenuEnabled())
                 return;
 
+            var drawCoordinates = (Entity e, float zDrawOffset) =>
+            {
+                SetDrawOrigin(e.Position.X, e.Position.Y, e.Position.Z + zDrawOffset, 0);
+                var coords = GetEntityCoords(e.Handle, false);
+                DrawTextOnScreen($"Coords X={coords.X} Y={coords.Y} Z={coords.Z}", 0f, 0f, 0.3f, Alignment.Center, 0);
+                ClearDrawOrigin();
+
+                SetDrawOrigin(e.Position.X, e.Position.Y, e.Position.Z + zDrawOffset - 0.3f, 0);
+                var rot = GetEntityRotation(e.Handle, 2);
+                DrawTextOnScreen($"Rot X={rot.X} Y={rot.Y} Z={coords.Z}", 0.0f, 0.0f, 0.3f, Alignment.Center, 0);
+                ClearDrawOrigin();
+
+                SetDrawOrigin(e.Position.X, e.Position.Y, e.Position.Z + zDrawOffset - 0.6f, 0);
+                var pitch = GetEntityPitch(e.Handle);
+                var heading = GetEntityHeading(e.Handle);
+                var roll = GetEntityRoll(e.Handle);
+                DrawTextOnScreen($"Pitch={pitch} Heading={heading} Roll={roll}", 0.0f, 0.0f, 0.3f, Alignment.Center, 0);
+                ClearDrawOrigin();
+            };
+
             if (MainMenu.PermissionsSetupComplete && MainMenu.MiscSettingsMenu != null)
             {
                 // Vehicles
@@ -2564,13 +2584,13 @@ namespace vMenuClient
 
                         if (MainMenu.MiscSettingsMenu.ShowEntityHandles && v.IsOnScreen)
                         {
-                            SetDrawOrigin(v.Position.X, v.Position.Y, v.Position.Z + 0.45f, 0);
+                            SetDrawOrigin(v.Position.X, v.Position.Y, v.Position.Z + 0.75f, 0);
                             DrawTextOnScreen($"Veh {v.Handle}", 0f, 0f, 0.3f, Alignment.Center, 0);
                             ClearDrawOrigin();
                         }
                         if (MainMenu.MiscSettingsMenu.ShowEntityModels && v.IsOnScreen)
                         {
-                            SetDrawOrigin(v.Position.X, v.Position.Y, v.Position.Z + 0.15f, 0);
+                            SetDrawOrigin(v.Position.X, v.Position.Y, v.Position.Z + 0.45f, 0);
                             var model = GetEntityModel(v.Handle);
 
                             var hashes = $"{model} / {(uint)model} / 0x{model:X8}";
@@ -2580,10 +2600,7 @@ namespace vMenuClient
                         }
                         if (MainMenu.MiscSettingsMenu.ShowEntityCoordinates && v.IsOnScreen)
                         {
-                            SetDrawOrigin(v.Position.X, v.Position.Y, v.Position.Z - 0.15f, 0);
-                            var coords = GetEntityCoords(v.Handle, false);
-                            DrawTextOnScreen($"Coords X={coords.X} Y={coords.Y} Z={coords.Z}", 0f, 0f, 0.3f, Alignment.Center, 0);
-                            ClearDrawOrigin();
+                            drawCoordinates(v, 0.15f);
                         }
                         if (MainMenu.MiscSettingsMenu.ShowEntityNetOwners && v.IsOnScreen)
                         {
@@ -2593,7 +2610,7 @@ namespace vMenuClient
                             {
                                 var playerServerId = GetPlayerServerId(netOwnerLocalId);
                                 var playerName = GetPlayerName(netOwnerLocalId);
-                                SetDrawOrigin(v.Position.X, v.Position.Y, v.Position.Z - 0.45f, 0);
+                                SetDrawOrigin(v.Position.X, v.Position.Y, v.Position.Z - 0.75f, 0);
                                 DrawTextOnScreen($"Owner ID {playerServerId} ({playerName})", 0f, 0f, 0.3f, Alignment.Center, 0);
                                 ClearDrawOrigin();
                             }
@@ -2615,14 +2632,14 @@ namespace vMenuClient
 
                         if (MainMenu.MiscSettingsMenu.ShowEntityHandles && p.IsOnScreen)
                         {
-                            SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z + 0.45f, 0);
+                            SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z + 0.75f, 0);
                             DrawTextOnScreen($"Prop {p.Handle}", 0f, 0f, 0.3f, Alignment.Center, 0);
                             ClearDrawOrigin();
                         }
 
                         if (MainMenu.MiscSettingsMenu.ShowEntityModels && p.IsOnScreen)
                         {
-                            SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z + 0.15f, 0);
+                            SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z + 0.45f, 0);
                             var model = GetEntityModel(p.Handle);
 
                             var hashes = $"{model} / {(uint)model} / 0x{model:X8}";
@@ -2633,10 +2650,7 @@ namespace vMenuClient
 
                         if (MainMenu.MiscSettingsMenu.ShowEntityCoordinates && p.IsOnScreen)
                         {
-                            SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z - 0.15f, 0);
-                            var coords = GetEntityCoords(p.Handle, false);
-                            DrawTextOnScreen($"Coords X={coords.X} Y={coords.Y} Z={coords.Z}", 0f, 0f, 0.3f, Alignment.Center, 0);
-                            ClearDrawOrigin();
+                            drawCoordinates(p, 0.15f);
                         }
 
                         if (MainMenu.MiscSettingsMenu.ShowEntityNetOwners && p.IsOnScreen)
@@ -2647,7 +2661,7 @@ namespace vMenuClient
                             {
                                 var playerServerId = GetPlayerServerId(netOwnerLocalId);
                                 var playerName = GetPlayerName(netOwnerLocalId);
-                                SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z - 0.45f, 0);
+                                SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z - 0.75f, 0);
                                 DrawTextOnScreen($"Owner ID {playerServerId} ({playerName})", 0f, 0f, 0.3f, Alignment.Center, 0);
                                 ClearDrawOrigin();
                             }
@@ -2669,14 +2683,14 @@ namespace vMenuClient
 
                         if (MainMenu.MiscSettingsMenu.ShowEntityHandles && p.IsOnScreen)
                         {
-                            SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z + 0.45f, 0);
+                            SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z + 0.75f, 0);
                             DrawTextOnScreen($"Ped {p.Handle}", 0f, 0f, 0.3f, Alignment.Center, 0);
                             ClearDrawOrigin();
                         }
 
                         if (MainMenu.MiscSettingsMenu.ShowEntityModels && p.IsOnScreen)
                         {
-                            SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z + 0.15f, 0);
+                            SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z + 0.45f, 0);
                             var model = GetEntityModel(p.Handle);
 
                             var hashes = $"{model} / {(uint)model} / 0x{model:X8}";
@@ -2687,10 +2701,7 @@ namespace vMenuClient
 
                         if (MainMenu.MiscSettingsMenu.ShowEntityCoordinates && p.IsOnScreen)
                         {
-                            SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z - 0.15f, 0);
-                            var coords = GetEntityCoords(p.Handle, false);
-                            DrawTextOnScreen($"Coords X={coords.X} Y={coords.Y} Z={coords.Z}", 0f, 0f, 0.3f, Alignment.Center, 0);
-                            ClearDrawOrigin();
+                            drawCoordinates(p, 0.15f);
                         }
 
                         if (MainMenu.MiscSettingsMenu.ShowEntityNetOwners && p.IsOnScreen)
@@ -2701,7 +2712,7 @@ namespace vMenuClient
                             {
                                 var playerServerId = GetPlayerServerId(netOwnerLocalId);
                                 var playerName = GetPlayerName(netOwnerLocalId);
-                                SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z - 0.45f, 0);
+                                SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z - 0.75f, 0);
                                 DrawTextOnScreen($"Owner ID {playerServerId} ({playerName})", 0f, 0f, 0.3f, Alignment.Center, 0);
                                 ClearDrawOrigin();
                             }
