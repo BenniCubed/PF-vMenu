@@ -37,7 +37,7 @@ namespace vMenuClient
         bool enabled = true;
         public bool Enabled
         {
-            get => enabled;
+            get => enabled && MainMenu.vMenuEnabled;
             set
             {
                 if (value && !enabled)

@@ -3303,7 +3303,7 @@ namespace vMenuClient
         private static bool isTimeWeatherControlEnabled = true;
         public static bool IsTimeWeatherControlEnabled
         {
-            get => isTimeWeatherControlEnabled;
+            get => isTimeWeatherControlEnabled && MainMenu.vMenuEnabled;
             set
             {
                 if (value && !isTimeWeatherControlEnabled)
@@ -3351,12 +3351,22 @@ namespace vMenuClient
             }
         }
 
+        private static bool TimeUpdateNeededDayMinutes(float dayMinutes1, float dayMinutes2, float speed)
+        {
+            float maxMinutesDelta = Math.Max(Math.Min(speed, 10), 2);
+            return Math.Abs(dayMinutes1 - dayMinutes2) > maxMinutesDelta;
+        }
+
         private static bool TimeUpdateNeededDayMinutes(
             TimeWeatherCommon.TimeState oldTs,
             TimeWeatherCommon.TimeState newTs)
         {
-            float maxMinutesDelta = Math.Max(Math.Min(1 * newTs.Speed, 10), 2);
-            return Math.Abs(newTs.DayMinutes - oldTs.DayMinutes) > maxMinutesDelta;
+            return TimeUpdateNeededDayMinutes(oldTs.DayMinutes, newTs.DayMinutes, newTs.Speed);
+        }
+
+        float GetCurrentDayMinutes()
+        {
+            return GetClockHours() * 60 + GetClockMinutes();
         }
 
         private async Task<bool> ChangeTimeTo(TimeWeatherCommon.TimeState target)
@@ -3364,7 +3374,7 @@ namespace vMenuClient
             const int DAY_MINUTES = 24 * 60;
             const int MINUTES_PER_TICK = 2;
 
-            float currentDayMinutes = GetClockHours() * 60 + GetClockMinutes();
+            float currentDayMinutes = GetCurrentDayMinutes();
 
             float diff;
             bool forward;
@@ -3459,8 +3469,10 @@ namespace vMenuClient
                 return;
             }
 
+            float currentDayMinutes = GetCurrentDayMinutes();
+
             int delay = 100;
-            if (prevTime == null || TimeUpdateNeededDayMinutes(prevTime, time) || time.Frozen)
+            if (prevTime == null || TimeUpdateNeededDayMinutes(prevTime, time) || TimeUpdateNeededDayMinutes(currentDayMinutes, time.DayMinutes, time.Speed) || time.Frozen)
             {
                 delay = time.Frozen ? 10 : delay;
                 var success = await ChangeTimeTo(time);
