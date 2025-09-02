@@ -457,7 +457,7 @@ namespace vMenuClient.menus
                 var spawnInVeh = new MenuCheckboxItem("Spawn Inside Vehicle", "This will teleport you into the vehicle when you spawn it.", SpawnInVehicle);
                 var replacePrev = new MenuCheckboxItem("Replace Previous Vehicle", "This will automatically delete your previously spawned vehicle when you spawn a new vehicle.", ReplaceVehicle);
                 var spawnUpgraded = new MenuCheckboxItem("Spawn Upgraded Vehicle", "This will spawn the vehicle with performance upgrades applied.", SpawnUpgraded);
-                var spawnDestructible = new MenuCheckboxItem("Spawn Destructible Vehicle", "This will make it so the spawned vehicle can explode on impact. As a side-effect, it will also despawn when too far away.", SpawnDestructible);
+                var spawnDestructible = new MenuCheckboxItem("Spawn Traffic-Style Vehicle", "This will make it so the spawned vehicle can despawn when too far away and explode on impact.", SpawnDestructible);
 
                 spawnOptionsMenu.AddMenuItem(spawnInVeh);
                 if (IsAllowed(Permission.VOMod))
@@ -485,7 +485,7 @@ namespace vMenuClient.menus
                     }
                     else if (item == spawnUpgraded)
                     {
-                        SpawnUpgraded = _checked;
+                        UserDefaults.VehicleSpawnerSpawnUpgraded = SpawnUpgraded = _checked;
                     }
                     else if (item == replacePrev)
                     {

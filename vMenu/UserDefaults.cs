@@ -400,7 +400,6 @@ namespace vMenuClient
                     "miscDeathNotifications" or
                     "miscJoinQuitNotifications" or
                     "vehicleSpawnerSpawnInside" or
-                    "vehicleSpawnerSpawnUpgraded" or
                     "vehicleSpawnerReplacePrevious" or
                     "neverWanted" or
                     "autoEquipParachuteWhenInPlane" or

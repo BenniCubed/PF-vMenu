@@ -98,7 +98,7 @@ namespace vMenuClient
             return false;
         }
 
-        private const int currentCleanupVersion = 2;
+        private const int cleanupVersion = 3;
         private static readonly LanguageManager Lm = new LanguageManager();
         #endregion
 
@@ -116,6 +116,7 @@ namespace vMenuClient
             var tmp_kvp_handle = StartFindKvp("");
             var cleanupVersionChecked = false;
             var tmp_kvp_names = new List<string>();
+            var currentCleanupVersion = cleanupVersion;
             while (true)
             {
                 var k = FindKvp(tmp_kvp_handle);
@@ -125,10 +126,9 @@ namespace vMenuClient
                 }
                 if (k == "vmenu_cleanup_version")
                 {
-                    if (KeyValueStore.GetInt("vmenu_cleanup_version") >= currentCleanupVersion)
-                    {
-                        cleanupVersionChecked = true;
-                    }
+                    currentCleanupVersion = KeyValueStore.GetInt("vmenu_cleanup_version");
+                    cleanupVersionChecked = currentCleanupVersion >= cleanupVersion;
+                    break;
                 }
                 tmp_kvp_names.Add(k);
             }
@@ -136,10 +136,8 @@ namespace vMenuClient
 
             if (!cleanupVersionChecked)
             {
-                KeyValueStore.Set("vmenu_cleanup_version", currentCleanupVersion);
                 foreach (var kvp in tmp_kvp_names)
                 {
-                    #pragma warning disable CS8793 // The given expression always matches the provided pattern.
                     if (currentCleanupVersion is 1 or 2)
                     {
                         if (!kvp.StartsWith("settings_") && !kvp.StartsWith("vmenu") && !kvp.StartsWith("veh_") && !kvp.StartsWith("ped_") && !kvp.StartsWith("mp_ped_"))
@@ -148,7 +146,6 @@ namespace vMenuClient
                             Debug.WriteLine($"[vMenu] [cleanup id: 1] Removed unused (old) KVP: {kvp}.");
                         }
                     }
-                    #pragma warning restore CS8793 // The given expression always matches the provided pattern.
                     if (currentCleanupVersion == 2)
                     {
                         if (kvp.StartsWith("mp_char"))
@@ -157,9 +154,14 @@ namespace vMenuClient
                             Debug.WriteLine($"[vMenu] [cleanup id: 2] Removed unused (old) KVP: {kvp}.");
                         }
                     }
+                    if (currentCleanupVersion < 3)
+                    {
+                        UserDefaults.VehicleSpawnerSpawnUpgraded = false;
+                    }
                 }
                 Debug.WriteLine("[vMenu] Cleanup of old unused KVP items completed.");
             }
+            KeyValueStore.Set("vmenu_cleanup_version", cleanupVersion);
             #endregion
 
             #region keymapping stuff
