@@ -222,13 +222,7 @@ namespace vMenuServer
 
                         if (GetSettingsBool(Setting.vmenu_enable_time_weather_sync))
                         {
-                            var time = TimeWeatherCommon.GetServerTime();
-                            FixInvalidTimeSelection(time);
-                            SetServerTime(time);
-
-                            var weatherSelection = TimeWeatherCommon.GetServerWeatherSelection();
-                            FixInvalidWeatherSelection(weatherSelection);
-                            SetServerWeatherSelection(weatherSelection);
+                            PrepareTimeWeatherSync();
 
                             Tick += TimeWeatherLoop;
                         }
@@ -476,25 +470,28 @@ namespace vMenuServer
             timeState.Speed = TimeWeatherCommon.TimeSpeeds[TimeWeatherCommon.TimeSpeedIndex(timeState.Speed)];
         }
 
+        private int GetRandomWeatherCycleDay(int day, TimeWeatherCommon.WeatherCycle weatherCycle)
+        {
+            int cycleDays = weatherCycle.Days;
+            if (day < 0)
+            {
+                var rand = new Random();
+                day = rand.Next(0, cycleDays);
+            }
+            else
+            {
+                day %= weatherCycle.Days;
+            }
+            return day;
+        }
+
         private void FixInvalidWeatherSelection(TimeWeatherCommon.ServerWeatherSelection weatherSelection)
         {
             TimeWeatherCommon.WeatherCycle weatherCycle = null;
             if (!string.IsNullOrEmpty(weatherSelection.Dynamic.CycleName) &&
                 TimeWeatherCommon.WeatherCyclesDict.TryGetValue(weatherSelection.Dynamic.CycleName, out weatherCycle))
             {
-                int day = weatherSelection.Dynamic.Day;
-                int cycleDays = weatherCycle.Days;
-                if (day < 0)
-                {
-                    var rand = new Random();
-                    day = rand.Next(0, cycleDays);
-                }
-                else
-                {
-                    day %= weatherCycle.Days;
-                }
-                weatherSelection.Dynamic.Day = day;
-
+                weatherSelection.Dynamic.Day = GetRandomWeatherCycleDay(weatherSelection.Dynamic.Day, weatherCycle);
                 return;
             }
 
@@ -515,6 +512,16 @@ namespace vMenuServer
             }
         }
 
+        void PrepareTimeWeatherSync()
+        {
+            var time = TimeWeatherCommon.GetServerTime();
+            FixInvalidTimeSelection(time);
+            SetServerTime(time);
+
+            var weatherSelection = TimeWeatherCommon.GetServerWeatherSelection();
+            FixInvalidWeatherSelection(weatherSelection);
+            SetServerWeatherSelection(weatherSelection);
+        }
 
         public void SetServerTime(TimeWeatherCommon.TimeState serverTime)
         {
@@ -570,24 +577,45 @@ namespace vMenuServer
 
         private async Task TimeWeatherLoop()
         {
-            var time = TimeWeatherCommon.GetServerTime();
-            if (!time.Frozen)
+            bool retry = true;
+            while (true)
             {
-                time.Minute += 0.5f * time.Speed;
-                if (time.Minute >= 60)
+                try
                 {
-                    time.Minute -= 60;
-                    if (++time.Hour == 24)
+                    var time = TimeWeatherCommon.GetServerTime();
+                    if (!time.Frozen)
                     {
-                        time.Hour = 0;
-                        DynamicWeatherSelectionIncrementDay();
+                        time.Minute += 0.5f * time.Speed;
+                        if (time.Minute >= 60)
+                        {
+                            time.Minute -= 60;
+                            if (++time.Hour == 24)
+                            {
+                                time.Hour = 0;
+                                DynamicWeatherSelectionIncrementDay();
+                            }
+                        }
+                        SetServerTime(time);
+                        UpdateDynamicWeather();
                     }
                 }
-                SetServerTime(time);
-                UpdateDynamicWeather();
-            }
+                catch
+                {
+                    if (!retry)
+                    {
+                        Debug.WriteLine("^1[vMenu] [ERROR]^7 Something went wrong while trying to sync time and weather with clients. Stopping the time-weather loop.");
+                        Tick -= TimeWeatherLoop;
+                        break;
+                    }
 
-            await Delay(1000);
+                    PrepareTimeWeatherSync();
+                    retry = false;
+                    continue;
+                }
+
+                await Delay(1000);
+                break;
+            }
         }
         #endregion
 
