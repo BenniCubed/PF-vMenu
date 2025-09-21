@@ -98,9 +98,6 @@ namespace vMenuClient.menus
             int hash = e.Model.Hash;
             var coords = e.Position;
             var rot = e.Rotation;
-            var pitch = GetEntityPitch(e.Handle);
-            var heading = e.Heading;
-            var roll = GetEntityRoll(e.Handle);
 
             StringBuilder sb = new StringBuilder();
             if (printHandle)
@@ -113,7 +110,6 @@ namespace vMenuClient.menus
             {
                 sb.AppendLine($"Coords: X={coords.X}, Y={coords.Y}, Z={coords.Z}");
                 sb.AppendLine($"Rot: X={rot.X}, Y={rot.Y}, Z={rot.Z}");
-                sb.AppendLine($"Pitch={pitch}, Heading={heading}, Roll={roll}");
             }
 
             if (printOwner)

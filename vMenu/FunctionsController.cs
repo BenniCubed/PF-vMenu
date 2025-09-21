@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 
 using vMenuClient.data;
 using vMenuClient.menus;
+
 using vMenuShared;
 
 using static CitizenFX.Core.Native.API;
@@ -2557,14 +2558,7 @@ namespace vMenuClient
 
                 SetDrawOrigin(e.Position.X, e.Position.Y, e.Position.Z + zDrawOffset - 0.3f, 0);
                 var rot = GetEntityRotation(e.Handle, 2);
-                DrawTextOnScreen($"Rot X={rot.X} Y={rot.Y} Z={coords.Z}", 0.0f, 0.0f, 0.3f, Alignment.Center, 0);
-                ClearDrawOrigin();
-
-                SetDrawOrigin(e.Position.X, e.Position.Y, e.Position.Z + zDrawOffset - 0.6f, 0);
-                var pitch = GetEntityPitch(e.Handle);
-                var heading = GetEntityHeading(e.Handle);
-                var roll = GetEntityRoll(e.Handle);
-                DrawTextOnScreen($"Pitch={pitch} Heading={heading} Roll={roll}", 0.0f, 0.0f, 0.3f, Alignment.Center, 0);
+                DrawTextOnScreen($"Rot X={rot.X} Y={rot.Y} Z={rot.Z}", 0.0f, 0.0f, 0.3f, Alignment.Center, 0);
                 ClearDrawOrigin();
             };
 
@@ -2610,7 +2604,7 @@ namespace vMenuClient
                             {
                                 var playerServerId = GetPlayerServerId(netOwnerLocalId);
                                 var playerName = GetPlayerName(netOwnerLocalId);
-                                SetDrawOrigin(v.Position.X, v.Position.Y, v.Position.Z - 0.75f, 0);
+                                SetDrawOrigin(v.Position.X, v.Position.Y, v.Position.Z - 0.45f, 0);
                                 DrawTextOnScreen($"Owner ID {playerServerId} ({playerName})", 0f, 0f, 0.3f, Alignment.Center, 0);
                                 ClearDrawOrigin();
                             }
@@ -2661,7 +2655,7 @@ namespace vMenuClient
                             {
                                 var playerServerId = GetPlayerServerId(netOwnerLocalId);
                                 var playerName = GetPlayerName(netOwnerLocalId);
-                                SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z - 0.75f, 0);
+                                SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z - 0.45f, 0);
                                 DrawTextOnScreen($"Owner ID {playerServerId} ({playerName})", 0f, 0f, 0.3f, Alignment.Center, 0);
                                 ClearDrawOrigin();
                             }
@@ -2712,7 +2706,7 @@ namespace vMenuClient
                             {
                                 var playerServerId = GetPlayerServerId(netOwnerLocalId);
                                 var playerName = GetPlayerName(netOwnerLocalId);
-                                SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z - 0.75f, 0);
+                                SetDrawOrigin(p.Position.X, p.Position.Y, p.Position.Z - 0.45f, 0);
                                 DrawTextOnScreen($"Owner ID {playerServerId} ({playerName})", 0f, 0f, 0.3f, Alignment.Center, 0);
                                 ClearDrawOrigin();
                             }
@@ -2755,7 +2749,7 @@ namespace vMenuClient
         /// discord rich presence
         /// </summary>
         /// <returns></returns>
-         static string FilterString(string tofilter)
+        static string FilterString(string tofilter)
         {
             var filter = new Dictionary<string, string>()
             {
@@ -2779,9 +2773,9 @@ namespace vMenuClient
             {"】", "]"},
             {"【", "["},
             };
-            foreach ( var filtervl in new Dictionary<string, string>(filter))
+            foreach (var filtervl in new Dictionary<string, string>(filter))
             {
-            tofilter = tofilter.Replace(filtervl.Key, filtervl.Value);
+                tofilter = tofilter.Replace(filtervl.Key, filtervl.Value);
             }
             return tofilter;
         }
@@ -2811,24 +2805,24 @@ namespace vMenuClient
             if (!((GetSettingsString(Setting.vmenu_discord_appid) == "") || (GetSettingsString(Setting.vmenu_discord_appid) == null)))
             {
                 SetDiscordAppId(GetSettingsString(Setting.vmenu_discord_appid));
-                if(!(GetSettingsString(Setting.vmenu_discord_text) == "" || GetSettingsString(Setting.vmenu_discord_text) == null))
+                if (!(GetSettingsString(Setting.vmenu_discord_text) == "" || GetSettingsString(Setting.vmenu_discord_text) == null))
                 {
                     SetRichPresence(CheckForSubstitutes(GetSettingsString(Setting.vmenu_discord_text)));
                 }
-                if(!((GetSettingsString(Setting.vmenu_discord_link_one_text) == "" || GetSettingsString(Setting.vmenu_discord_link_one) == null)||(GetSettingsString(Setting.vmenu_discord_link_one_text) == null || GetSettingsString(Setting.vmenu_discord_link_one) == "")))
+                if (!((GetSettingsString(Setting.vmenu_discord_link_one_text) == "" || GetSettingsString(Setting.vmenu_discord_link_one) == null) || (GetSettingsString(Setting.vmenu_discord_link_one_text) == null || GetSettingsString(Setting.vmenu_discord_link_one) == "")))
                 {
                     SetDiscordRichPresenceAction(0, CheckForSubstitutes(GetSettingsString(Setting.vmenu_discord_link_one_text)), GetSettingsString(Setting.vmenu_discord_link_one));
                 }
-                if(!((GetSettingsString(Setting.vmenu_discord_link_two_text) == "" || GetSettingsString(Setting.vmenu_discord_link_two) == null)||(GetSettingsString(Setting.vmenu_discord_link_two_text) == null || GetSettingsString(Setting.vmenu_discord_link_two) == "")))
+                if (!((GetSettingsString(Setting.vmenu_discord_link_two_text) == "" || GetSettingsString(Setting.vmenu_discord_link_two) == null) || (GetSettingsString(Setting.vmenu_discord_link_two_text) == null || GetSettingsString(Setting.vmenu_discord_link_two) == "")))
                 {
                     SetDiscordRichPresenceAction(1, CheckForSubstitutes(GetSettingsString(Setting.vmenu_discord_link_two_text)), GetSettingsString(Setting.vmenu_discord_link_two));
                 }
-                if(!((GetSettingsString(Setting.vmenu_discord_large_image) == "" || GetSettingsString(Setting.vmenu_discord_large_image_text) == null)||(GetSettingsString(Setting.vmenu_discord_large_image) == null || GetSettingsString(Setting.vmenu_discord_large_image_text) == "")))
+                if (!((GetSettingsString(Setting.vmenu_discord_large_image) == "" || GetSettingsString(Setting.vmenu_discord_large_image_text) == null) || (GetSettingsString(Setting.vmenu_discord_large_image) == null || GetSettingsString(Setting.vmenu_discord_large_image_text) == "")))
                 {
                     SetDiscordRichPresenceAsset(GetSettingsString(Setting.vmenu_discord_large_image));
                     SetDiscordRichPresenceAssetText(CheckForSubstitutes(GetSettingsString(Setting.vmenu_discord_large_image_text)));
                 }
-                if(!((GetSettingsString(Setting.vmenu_discord_small_image) == "" || GetSettingsString(Setting.vmenu_discord_small_image_text) == null)||(GetSettingsString(Setting.vmenu_discord_small_image) == null || GetSettingsString(Setting.vmenu_discord_small_image_text) == "")))
+                if (!((GetSettingsString(Setting.vmenu_discord_small_image) == "" || GetSettingsString(Setting.vmenu_discord_small_image_text) == null) || (GetSettingsString(Setting.vmenu_discord_small_image) == null || GetSettingsString(Setting.vmenu_discord_small_image_text) == "")))
                 {
                     SetDiscordRichPresenceAssetSmall(GetSettingsString(Setting.vmenu_discord_small_image));
                     SetDiscordRichPresenceAssetSmallText(CheckForSubstitutes(GetSettingsString(Setting.vmenu_discord_small_image_text)));
@@ -2968,7 +2962,7 @@ namespace vMenuClient
             if (!await MainMenu.CheckVMenuEnabled())
                 return;
 
-            if (MainMenu.PersonalVehicleMenu.enableBlip.Checked  && MainMenu.PersonalVehicleMenu.CurrentPersonalVehicle != null)
+            if (MainMenu.PersonalVehicleMenu.enableBlip.Checked && MainMenu.PersonalVehicleMenu.CurrentPersonalVehicle != null)
             {
                 if (DoesEntityExist(MainMenu.PersonalVehicleMenu.CurrentPersonalVehicle.Handle))
                 {
@@ -3529,11 +3523,11 @@ namespace vMenuClient
             if (!await MainMenu.CheckVMenuEnabled())
                 return;
 
-            float valsvdm = GetSettingsFloat(Setting.vmenu_set_vehicle_density_multiplier)+0.0f;
-            float valspdm = GetSettingsFloat(Setting.vmenu_set_ped_density_multiplier)+0.0f;
-            float valsrvdm = GetSettingsFloat(Setting.vmenu_set_random_vehicle_density_multiplier)+0.0f;
-            float valspvdm = GetSettingsFloat(Setting.vmenu_set_parked_vehicle_density_multiplier)+0.0f;
-            float valsdpdm = GetSettingsFloat(Setting.vmenu_set_scenario_ped_density_multiplier)+0.0f;
+            float valsvdm = GetSettingsFloat(Setting.vmenu_set_vehicle_density_multiplier) + 0.0f;
+            float valspdm = GetSettingsFloat(Setting.vmenu_set_ped_density_multiplier) + 0.0f;
+            float valsrvdm = GetSettingsFloat(Setting.vmenu_set_random_vehicle_density_multiplier) + 0.0f;
+            float valspvdm = GetSettingsFloat(Setting.vmenu_set_parked_vehicle_density_multiplier) + 0.0f;
+            float valsdpdm = GetSettingsFloat(Setting.vmenu_set_scenario_ped_density_multiplier) + 0.0f;
             var valsgt = GetSettingsBool(Setting.vmenu_set_garbage_trucks);
             var valsrb = GetSettingsBool(Setting.vmenu_set_random_boats);
             var valscrc = GetSettingsBool(Setting.vmenu_set_create_random_cops);
@@ -3555,7 +3549,7 @@ namespace vMenuClient
             {
 
                 ClearAreaOfVehicles(GetEntityCoords(PlayerPedId(), false).X, GetEntityCoords(PlayerPedId(), false).Y, GetEntityCoords(PlayerPedId(), false).Z, 1000, false, false, false, false, false);
-                RemoveVehiclesFromGeneratorsInArea((float)(GetEntityCoords(PlayerPedId(), false).X - 500.0), (float)(GetEntityCoords(PlayerPedId(), false).Y - 500.0), (float)(GetEntityCoords(PlayerPedId(), false).Z - 500.0), (float)(GetEntityCoords(PlayerPedId(), false).X+ 500.0), (float)(GetEntityCoords(PlayerPedId(), false).Y + 500.0), (float)(GetEntityCoords(PlayerPedId(), false).Z + 500.0), 0);
+                RemoveVehiclesFromGeneratorsInArea((float)(GetEntityCoords(PlayerPedId(), false).X - 500.0), (float)(GetEntityCoords(PlayerPedId(), false).Y - 500.0), (float)(GetEntityCoords(PlayerPedId(), false).Z - 500.0), (float)(GetEntityCoords(PlayerPedId(), false).X + 500.0), (float)(GetEntityCoords(PlayerPedId(), false).Y + 500.0), (float)(GetEntityCoords(PlayerPedId(), false).Z + 500.0), 0);
             }
             await Delay(0);
         }
@@ -3582,12 +3576,12 @@ namespace vMenuClient
                     {5, "yankton_plate"},
                 };
 
-                foreach ( var Plates in new Dictionary<int, string>(PlateList))
+                foreach (var Plates in new Dictionary<int, string>(PlateList))
                 {
 
-                    var stuff = GetConvar("vmenu_plate_override_"+Plates.Value, "false");
+                    var stuff = GetConvar("vmenu_plate_override_" + Plates.Value, "false");
 
-                    if (!(stuff == "false" || stuff == null || stuff == "") )
+                    if (!(stuff == "false" || stuff == null || stuff == ""))
                     {
                         var data2 = JsonConvert.DeserializeObject<vMenuShared.ConfigManager.PlateStruct>(stuff);
                         if (!(data2.fileName == null))
