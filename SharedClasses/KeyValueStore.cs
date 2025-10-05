@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+
+using vMenuShared;
 
 using static CitizenFX.Core.Native.API;
 
@@ -13,6 +16,41 @@ namespace vMenuServer
 {
     public static partial class KeyValueStore
     {
+        private static readonly string localPrefix =
+            ConfigManager.GetSettingsString(ConfigManager.Setting.vmenu_kvs_local_prefix, "");
+
+        private static string PrefixKeyForLocal(string key)
+        {
+            if (key.StartsWith("prefix:"))
+            {
+                throw new InvalidOperationException($"Key cannot start with 'prefix:'");
+            }
+
+            if (!string.IsNullOrEmpty(localPrefix))
+            {
+                return $"prefix:{localPrefix}_{key}";
+            }
+            else
+            {
+                return key;
+            }
+        }
+
+        private static string UnprefixLocalKey(string key)
+        {
+            if (string.IsNullOrEmpty(localPrefix))
+            {
+                return key;
+            }
+
+            string prefix = $"prefix:{localPrefix}_";
+            if (!key.StartsWith(prefix))
+            {
+                throw new InvalidOperationException($"Key '{key}' does not start with local prefix '{localPrefix}'");
+            }
+            return key.Substring(prefix.Length);
+        }
+
         public enum ValueType
         {
             String = 0,
@@ -71,7 +109,7 @@ namespace vMenuServer
 
         private static void SetLocal(string key, ValueInfo vi)
         {
-            switch(vi.Type)
+            switch (vi.Type)
             {
                 case ValueType.String:
                     SetLocal(key, vi.AsString());
@@ -84,12 +122,13 @@ namespace vMenuServer
                     break;
             }
         }
-        public static void SetLocal(string key, string value) => SetResourceKvp(key, value);
-        public static void SetLocal(string key, int value) => SetResourceKvpInt(key, value);
-        public static void SetLocal(string key, float value) => SetResourceKvpFloat(key, value);
+        public static void SetLocal(string key, string value) => SetResourceKvp(PrefixKeyForLocal(key), value);
+        public static void SetLocal(string key, int value) => SetResourceKvpInt(PrefixKeyForLocal(key), value);
+        public static void SetLocal(string key, float value) => SetResourceKvpFloat(PrefixKeyForLocal(key), value);
 
         private static ValueInfo Get(string key)
         {
+            key = PrefixKeyForLocal(key);
             try
             {
                 return new ValueInfo(GetResourceKvpString(key));
@@ -159,13 +198,14 @@ namespace vMenuServer
         {
             var keyValues = new Dictionary<string, ValueInfo>();
 
-            var handle = StartFindKvp(keyPrefix);
+            var handle = StartFindKvp(PrefixKeyForLocal(keyPrefix));
             while (true)
             {
                 var key = FindKvp(handle);
                 if (key is "" or null or "NULL")
                     break;
 
+                key = UnprefixLocalKey(key);
                 var vi = Get(key);
                 if (type is null || vi.Type == type)
                     keyValues[key] = vi;
@@ -180,15 +220,17 @@ namespace vMenuServer
             GetAllWithPrefix(keyPrefix, ValueType.Int).ToDictionary(kv => kv.Key, kv => kv.Value.AsInt());
         public static Dictionary<string, float> GetAllWithPrefixFloat(string keyPrefix) =>
             GetAllWithPrefix(keyPrefix, ValueType.Float).ToDictionary(kv => kv.Key, kv => kv.Value.AsFloat());
+
+        public static void RemoveLocal(string key) => DeleteResourceKvp(PrefixKeyForLocal(key));
     }
 }
 
 namespace vMenuShared
 {
 #if CLIENT
-using vMenuClient;
+    using vMenuClient;
 #else
-using vMenuServer;
+    using vMenuServer;
 #endif
 
     public static class KeyValueStoreSync

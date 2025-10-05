@@ -189,6 +189,9 @@ namespace vMenuServer
 
         public static async Task SetAll(string playerLicense, Dictionary<string, ValueInfo> keyValues)
         {
+            if (keyValues == null || keyValues.Count == 0)
+                return;
+
             using (var connection = new MySqlConnection(ConnectionString))
             {
                 await connection.OpenAsync();
@@ -247,9 +250,22 @@ namespace vMenuServer
 
         public static async Task HandleRequest(Player player, string json)
         {
-            var request = JsonConvert.DeserializeObject<Request>(json);
-            var response = await HandleRequest(player, request);
-            SendResponse(player, response);
+            try
+            {
+                var request = JsonConvert.DeserializeObject<Request>(json);
+                var response = await HandleRequest(player, request);
+                SendResponse(player, response);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine($"Error handling database key-value store request from player {player.Name}: {e}");
+                var response = new Response
+                {
+                    Type = Response.ResponseType.Error,
+                    Error = "Error"
+                };
+                SendResponse(player, response);
+            }
         }
 
         private static async Task<Response> HandleRequest(Player player, Request request)
@@ -324,7 +340,7 @@ namespace vMenuServer
             return new Response
             {
                 DataRemove = new Response.ResponseDataRemove
-                {}
+                { }
             };
         }
 
@@ -359,27 +375,30 @@ namespace vMenuServer
             var localKvs = GetAll();
             var databaseKvs = await DatabaseKeyValueStore.GetAll();
 
-            var localNonDatabaseKvs = localKvs
-                .Where(kv => !databaseKvs.ContainsKey(kv.Key))
-                .ToDictionary(kv => kv.Key, kv => kv.Value);
-
             foreach (var kv in databaseKvs)
             {
                 SetLocal(kv.Key, kv.Value);
             }
-            try
+
+            if (ConfigManager.GetSettingsBool(ConfigManager.Setting.vmenu_kvs_sync_local))
             {
-                await DatabaseKeyValueStore.SetAll(localNonDatabaseKvs);
-            }
-            catch (MySqlException e)
-            {
-                Debug.WriteLine($"Error setting multiple keys in database key-value store: {e.Message}");
+                try
+                {
+                    var localNonDatabaseKvs = localKvs
+                        .Where(kv => !databaseKvs.ContainsKey(kv.Key))
+                        .ToDictionary(kv => kv.Key, kv => kv.Value);
+                    await DatabaseKeyValueStore.SetAll(localNonDatabaseKvs);
+                }
+                catch (MySqlException e)
+                {
+                    Debug.WriteLine($"Error setting multiple keys in database key-value store: {e.Message}");
+                }
             }
         }
 
         public async static Task Remove(string key)
         {
-            DeleteResourceKvp(key);
+            RemoveLocal(key);
             try
             {
                 await DatabaseKeyValueStore.Remove(key);

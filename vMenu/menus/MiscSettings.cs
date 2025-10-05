@@ -113,7 +113,7 @@ namespace vMenuClient.menus
             }
 
             if (printOwner)
-                    sb.AppendLine($"Owner: {NetworkGetEntityOwner(e.Handle)}");
+                sb.AppendLine($"Owner: {NetworkGetEntityOwner(e.Handle)}");
 
             return sb.ToString();
         }
@@ -164,9 +164,9 @@ namespace vMenuClient.menus
 
             // Create the menu items.
             var copyCoordinates = new MenuItem("Copy Coordinates", "Copy your current coordinates to the clipboard.");
-            var alignMenu = new MenuListItem("Align Menu", new List<string>{"Left", "Right"}, MiscRightAlignMenu ? 1 : 0, "Align the menu left or right.");
+            var alignMenu = new MenuListItem("Align Menu", new List<string> { "Left", "Right" }, MiscRightAlignMenu ? 1 : 0, "Align the menu left or right.");
             var disablePms = new MenuCheckboxItem("Disable Private Messages", "Prevent others from sending you private messages.", MiscDisablePrivateMessages);
-            var speed = new MenuListItem("Show Speed", new List<string>{"Off", "km/h", "mph"}, (int)SpeedDisplay, "Display a speedometer on the screen.");
+            var speed = new MenuListItem("Show Speed", new List<string> { "Off", "km/h", "mph" }, (int)SpeedDisplay, "Display a speedometer on the screen.");
             var coords = new MenuCheckboxItem("Show Coordinates", "Display your current coordinates at the top of the screen.", ShowCoordinates);
             var hideRadar = new MenuCheckboxItem("Hide Radar", "Hide the radar/minimap.", HideRadar);
             var hideHud = new MenuCheckboxItem("Hide HUD", "Hide all HUD elements.", HideHud);
@@ -180,9 +180,7 @@ namespace vMenuClient.menus
             var saveInfoWarning = GetSettingsBool(Setting.vmenu_server_store)
                 ? ""
                 : " ~y~All saving is done on the client side; if you delete FiveM you will lose your settings.~s~";
-            var saveSettings = new MenuItem(
-                "~b~~h~Save Personal Settings~h~~s~",
-                $"Save your current settings. Settings are shared across all servers using vMenu.{saveInfoWarning}")
+            var saveSettings = new MenuItem("~b~~h~Save Personal Settings~h~~s~", "Save your current settings.")
             {
                 RightIcon = MenuItem.Icon.TICK
             };
@@ -202,7 +200,7 @@ namespace vMenuClient.menus
             var dimensionsDistanceSlider = new MenuSliderItem("Show Outlines Radius", "Change the outline draw range.", 0, 20, 0, false);
             var copyEntityInfo = new MenuItem("Copy Entity Info", "Copies information about the entities surrounding you to the clipboard (you must enable at least one of the outline and entity information checkboxes below for this to work).");
 
-            var clearArea = new MenuListItem("Clear Area", new List<string>{"5 m", "10 m", "25 m", "50 m", "100 m", "250 m", "500 m", "1000 m"}, 2, "Clears the area around your player. Damage, dirt, peds, props, vehicles, etc. get cleaned up, fixed and reset to the default world state.");
+            var clearArea = new MenuListItem("Clear Area", new List<string> { "5 m", "10 m", "25 m", "50 m", "100 m", "250 m", "500 m", "1000 m" }, 2, "Clears the area around your player. Damage, dirt, peds, props, vehicles, etc. get cleaned up, fixed and reset to the default world state.");
 
             ResetIndex = new MenuCheckboxItem("Reset Index", "Resets index once you go to main menu.", false);
 
@@ -450,7 +448,7 @@ namespace vMenuClient.menus
                             vehicles.ForEach(e => printEntityInfo(sbVehicles, e));
                         }
 
-                        var infos = new StringBuilder[]{sbProps, sbPeds, sbVehicles}
+                        var infos = new StringBuilder[] { sbProps, sbPeds, sbVehicles }
                             .Select(x => x.ToString())
                             .Where(i => !string.IsNullOrEmpty(i))
                             .ToArray();
@@ -814,7 +812,7 @@ namespace vMenuClient.menus
             // Always allowed
             if (IsAllowed(Permission.ResetIndex))
             {
-            menu.AddMenuItem(ResetIndex);
+                menu.AddMenuItem(ResetIndex);
             }
             if (MainMenu.EnableExperimentalFeatures)
             {
@@ -905,11 +903,12 @@ namespace vMenuClient.menus
                 {
                     UserDefaults.SaveSettings();
                     saveSettings.Enabled = false;
-                    async void TimeoutFunction ()
+                    async void TimeoutFunction()
                     {
                         await Delay(2000);
                         saveSettings.Enabled = true;
-                    };
+                    }
+                    ;
                     TimeoutFunction();
                 }
             };

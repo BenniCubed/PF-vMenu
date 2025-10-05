@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using static CitizenFX.Core.Native.API;
 using static vMenuClient.CommonFunctions;
 using static vMenuClient.KeyValueStore;
 using static vMenuShared.KeyValueStoreSync;
+using static vMenuShared.ConfigManager;
 
 namespace vMenuClient
 {
@@ -42,7 +44,7 @@ namespace vMenuClient
         }
 
 
-        public static async Task Remove(string key)
+        public static async Task<bool> Remove(string key)
         {
             var request = new Request
             {
@@ -58,9 +60,10 @@ namespace vMenuClient
             {
                 Debug.WriteLine($"Error removing \"{key}\" from remote key-value store: {response.Error}");
             }
+            return response.Type != Response.ResponseType.Error;
         }
 
-        public static async Task Set(string key, ValueInfo vi)
+        public static async Task<bool> Set(string key, ValueInfo vi)
         {
             var request = new Request
             {
@@ -77,9 +80,10 @@ namespace vMenuClient
             {
                 Debug.WriteLine($"Error setting \"{key}={vi.Value}\" in remote key-value store: {response.Error}");
             }
+            return response.Type != Response.ResponseType.Error;
         }
 
-        public static async Task SetAll(Dictionary<string, ValueInfo> keyValues)
+        public static async Task<bool> SetAll(Dictionary<string, ValueInfo> keyValues)
         {
             var request = new Request
             {
@@ -95,6 +99,7 @@ namespace vMenuClient
             {
                 Debug.WriteLine($"Error setting multiple keys in remote key-value store: {response.Error}");
             }
+            return response.Type != Response.ResponseType.Error;
         }
 
         public static async Task<Dictionary<string, ValueInfo>> GetAll()
@@ -118,8 +123,7 @@ namespace vMenuClient
                 case Response.ResponseType.Ok:
                     return response.DataGetAll?.KeyValues;
                 default:
-                    Debug.WriteLine("BUG");
-                    return new Dictionary<string, ValueInfo>();
+                    throw new InvalidOperationException("Invalid response type received from server.");
             }
         }
     }
@@ -131,9 +135,7 @@ namespace vMenuClient
             var localKvs = GetAll();
             var remoteKvs = await RemoteKeyValueStore.GetAll();
 
-            var localNonServerKvs = localKvs
-                .Where(kv => !remoteKvs.ContainsKey(kv.Key))
-                .ToDictionary(kv => kv.Key, kv => kv.Value);
+            Console.WriteLine("Keys: " + string.Join(",", remoteKvs.Keys));
 
             var remoteDiffLocal = remoteKvs.Where(kv =>
                 !localKvs.ContainsKey(kv.Key) ||
@@ -144,14 +146,21 @@ namespace vMenuClient
             {
                 SetLocal(kv.Key, kv.Value);
             }
-            await RemoteKeyValueStore.SetAll(localNonServerKvs);
+
+            if (GetSettingsBool(Setting.vmenu_kvs_sync_local))
+            {
+                var localNonServerKvs = localKvs
+                    .Where(kv => !remoteKvs.ContainsKey(kv.Key))
+                    .ToDictionary(kv => kv.Key, kv => kv.Value);
+                await RemoteKeyValueStore.SetAll(localNonServerKvs);
+            }
 
             return remoteDiffLocal.Any();
         }
 
         public static async Task RemoveAsync(string key)
         {
-            DeleteResourceKvp(key);
+            RemoveLocal(key);
             await RemoteKeyValueStore.Remove(key);
         }
         public static void Remove(string key) => _ = RemoveAsync(key);

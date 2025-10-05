@@ -167,44 +167,44 @@ namespace vMenuClient
             #region keymapping stuff
             RegisterCommand($"{GetSettingsString(Setting.vmenu_individual_server_id)}vMenu:NoClip", new Action<dynamic, List<dynamic>, string>((dynamic source, List<dynamic> args, string rawCommand) =>
                {
-                    if (!vMenuEnabled)
-                        return;
+                   if (!vMenuEnabled)
+                       return;
 
-                    if ( IsAllowed(Permission.NoClip) )
-                    {
-                        if (Game.PlayerPed.IsInVehicle())
-                        {
-                            var veh = GetVehicle();
-                            if (veh != null && veh.Exists() && veh.Driver == Game.PlayerPed)
-                            {
-                                NoClipEnabled = !NoClipEnabled;
-                            }
-                            else
-                            {
-                                NoClipEnabled = false;
-                                Notify.Error("This vehicle does not exist (somehow) or you need to be the driver of this vehicle to enable noclip!");
-                            }
-                        }
-                        else
-                        {
-                            NoClipEnabled = !NoClipEnabled;
-                        }
-                    }
+                   if (IsAllowed(Permission.NoClip))
+                   {
+                       if (Game.PlayerPed.IsInVehicle())
+                       {
+                           var veh = GetVehicle();
+                           if (veh != null && veh.Exists() && veh.Driver == Game.PlayerPed)
+                           {
+                               NoClipEnabled = !NoClipEnabled;
+                           }
+                           else
+                           {
+                               NoClipEnabled = false;
+                               Notify.Error("This vehicle does not exist (somehow) or you need to be the driver of this vehicle to enable noclip!");
+                           }
+                       }
+                       else
+                       {
+                           NoClipEnabled = !NoClipEnabled;
+                       }
+                   }
                }), false);
 
             RegisterCommand($"{GetSettingsString(Setting.vmenu_individual_server_id)}vMenu:toggle", new Action<dynamic, List<dynamic>, string>((dynamic source, List<dynamic> args, string rawCommand) =>
                {
-                    if (!vMenuEnabled || Menu == null)
-                        return;
+                   if (!vMenuEnabled || Menu == null)
+                       return;
 
-                    if (!MenuController.IsAnyMenuOpen())
-                    {
-                        Menu.Menu.OpenMenu();
-                    }
-                    else
-                    {
-                        MenuController.CloseAllMenus();
-                    }
+                   if (!MenuController.IsAnyMenuOpen())
+                   {
+                       Menu.Menu.OpenMenu();
+                   }
+                   else
+                   {
+                       MenuController.CloseAllMenus();
+                   }
                }), false);
             if (!(GetSettingsString(Setting.vmenu_menu_toggle_key) == null))
             {
@@ -257,7 +257,7 @@ namespace vMenuClient
                             if (IsPedSittingInAnyVehicle(player))
                             {
                                 var veh = GetVehicle();
-                                if ( GetPedInVehicleSeat(veh.Handle, -1) == player)
+                                if (GetPedInVehicleSeat(veh.Handle, -1) == player)
                                 {
                                     DelVeh(veh, 5, veh.Handle);
                                 }
@@ -329,7 +329,7 @@ namespace vMenuClient
                 {
                     veh.Delete();
                 }
-                if ( DoesEntityExist(vehicle) && timeout < maxtimeout)
+                if (DoesEntityExist(vehicle) && timeout < maxtimeout)
                 {
                     while (DoesEntityExist(vehicle) && timeout < maxtimeout)
                     {
@@ -355,21 +355,21 @@ namespace vMenuClient
                         vehval.Delete();
                         if (!DoesEntityExist(vehicle))
                         {
-                           Notify.Success("The vehicle has been deleted!");
-                           if (vMenuShared.ConfigManager.GetSettingsBool(vMenuShared.ConfigManager.Setting.pfvmenu_moshnotify_setting))
-                           {
-                               //TriggerEvent("mosh_notify:notify", "SUCCESS", "<span class=\"text-white\">The vehicle has been deleted!</span>", "success", "success", 5000);
-                           }
+                            Notify.Success("The vehicle has been deleted!");
+                            if (vMenuShared.ConfigManager.GetSettingsBool(vMenuShared.ConfigManager.Setting.pfvmenu_moshnotify_setting))
+                            {
+                                //TriggerEvent("mosh_notify:notify", "SUCCESS", "<span class=\"text-white\">The vehicle has been deleted!</span>", "success", "success", 5000);
+                            }
                         }
                         timeout++;
                         await Delay(1000);
-                        if ( DoesEntityExist(vehicle) && timeout == maxtimeout -1)
+                        if (DoesEntityExist(vehicle) && timeout == maxtimeout - 1)
                         {
-                           Notify.Error($"Failed to delete vehicle, after {maxtimeout} retries.");
-                           if (vMenuShared.ConfigManager.GetSettingsBool(vMenuShared.ConfigManager.Setting.pfvmenu_moshnotify_setting))
-                           {
-                               //TriggerEvent("mosh_notify:notify", "ERROR", $"<span class=\"text-white\">Failed to delete vehicle, after {maxtimeout} retries.</span>", "darkred", "error", 5000);
-                           }
+                            Notify.Error($"Failed to delete vehicle, after {maxtimeout} retries.");
+                            if (vMenuShared.ConfigManager.GetSettingsBool(vMenuShared.ConfigManager.Setting.pfvmenu_moshnotify_setting))
+                            {
+                                //TriggerEvent("mosh_notify:notify", "ERROR", $"<span class=\"text-white\">Failed to delete vehicle, after {maxtimeout} retries.</span>", "darkred", "error", 5000);
+                            }
                         }
                     }
                 }
@@ -554,19 +554,22 @@ namespace vMenuClient
             Exports.Add("enable", new Action(() => vMenuEnabled = true));
             Exports.Add("disable", new Action(() => vMenuEnabled = false));
 
-            Exports.Add("enable_time_weather_control", new Action(() => {
+            Exports.Add("enable_time_weather_control", new Action(() =>
+            {
                 if (PlayerTimeWeatherOptionsMenu != null)
                     PlayerTimeWeatherOptionsMenu.Enabled = true;
                 FunctionsController.IsTimeWeatherControlEnabled = true;
             }));
-            Exports.Add("disable_time_weather_control", new Action(() => {
+            Exports.Add("disable_time_weather_control", new Action(() =>
+            {
                 if (PlayerTimeWeatherOptionsMenu != null)
                     PlayerTimeWeatherOptionsMenu.Enabled = false;
                 FunctionsController.IsTimeWeatherControlEnabled = false;
             }));
 
             Exports.Add("is_any_menu_open", new Func<bool>(MenuController.IsAnyMenuOpen));
-            Exports.Add("is_freezing_ped", new Func<bool>(() => {
+            Exports.Add("is_freezing_ped", new Func<bool>(() =>
+            {
                 if (FunctionsController.IsMpCharEditorOpen())
                     return true;
 
@@ -984,7 +987,7 @@ namespace vMenuClient
                     await TeleportOptionsMenu.TeleportToPrevTpLocation(practiceTpState.Value);
 
                     Vehicle vehicle = Game.PlayerPed.CurrentVehicle;
-                    if(LastVehicleModel is uint && (vehicle == null || LastVehicleModel != vehicle.Model.Hash))
+                    if (LastVehicleModel is uint && (vehicle == null || LastVehicleModel != vehicle.Model.Hash))
                     {
                         await SpawnLastVehicle(spawnInside: true, replacePrevious: true);
                         vehicle = Game.PlayerPed.CurrentVehicle;
@@ -1000,7 +1003,8 @@ namespace vMenuClient
                         }
                     }
 
-                    SendNuiMessage(JsonConvert.SerializeObject(new {
+                    SendNuiMessage(JsonConvert.SerializeObject(new
+                    {
                         type = "practiceTimer:restart"
                     }));
                 }
@@ -1015,7 +1019,8 @@ namespace vMenuClient
                     var resetButton = new MenuItem("Retry", "Retry from your practice location in a repaired version of your last spawned vehicle. ~g~You can create a key bind for this in the GTA settings.~s~").ToWrapped();
                     practiceMenu.AddItem(resetButton);
 
-                    resetButton.Selected += async (_s, _args) => {
+                    resetButton.Selected += async (_s, _args) =>
+                    {
                         await PracticeRetry();
                     };
 
@@ -1050,7 +1055,8 @@ namespace vMenuClient
                         "Practice Timer",
                         "Enable or disable the practice timer. The timer will be restarted whenever you retry.",
                         false).ToWrapped();
-                    PracticeTimerCheckbox.CheckboxChanged += (_s, args) => {
+                    PracticeTimerCheckbox.CheckboxChanged += (_s, args) =>
+                    {
                         TogglePracticeTimer(args.Checked);
                     };
 

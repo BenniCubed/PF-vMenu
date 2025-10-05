@@ -729,7 +729,7 @@ namespace vMenuClient.menus
             index %= allowedPedModels.Count;
 
             var it = allowedPedModels.GetEnumerator();
-            for(int i = 0; i < index; i++)
+            for (int i = 0; i < index; i++)
             {
                 it.MoveNext();
             }

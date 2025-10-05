@@ -238,13 +238,15 @@ namespace vMenuClient
 
             MenuItem saveDrone = new MenuItem("Save Current Drone", "Save the current drone parameters.");
             savedDronesMenu.AddMenuItem(saveDrone);
-            savedDronesMenu.OnMenuOpen += (sender) => {
+            savedDronesMenu.OnMenuOpen += (sender) =>
+            {
                 savedDronesMenu.ClearMenuItems();
                 savedDronesMenu.AddMenuItem(saveDrone);
                 LoadDroneCameras();
             };
 
-            savedDronesMenu.OnItemSelect += (sender, item, index) => {
+            savedDronesMenu.OnItemSelect += (sender, item, index) =>
+            {
                 if (item == saveDrone)
                 {
                     SaveCamera();
@@ -264,11 +266,13 @@ namespace vMenuClient
             selectedDroneMenu.AddMenuItem(renameCamera);
             selectedDroneMenu.AddMenuItem(deleteCamera);
 
-            selectedDroneMenu.OnMenuClose += (sender) => {
+            selectedDroneMenu.OnMenuClose += (sender) =>
+            {
                 selectedDroneMenu.RefreshIndex();
             };
 
-            selectedDroneMenu.OnItemSelect += async (sender, item, index) => {
+            selectedDroneMenu.OnItemSelect += async (sender, item, index) =>
+            {
                 if (item == spawnCamera)
                 {
                     EnhancedCamera.ResetCameras();
@@ -319,7 +323,8 @@ namespace vMenuClient
             #region handling menu changes
 
             // Handle checkbox changes
-            menu.OnCheckboxChange += (_menu, _item, _index, _checked) => {
+            menu.OnCheckboxChange += (_menu, _item, _index, _checked) =>
+            {
                 if (_item == invertPitch)
                 {
                     invertedPitch = _checked;
@@ -331,7 +336,8 @@ namespace vMenuClient
             };
 
             // Handle sliders
-            menu.OnListIndexChange += (_menu, _listItem, _oldIndex, _newIndex, _itemIndex) => {
+            menu.OnListIndexChange += (_menu, _listItem, _oldIndex, _newIndex, _itemIndex) =>
+            {
                 if (_listItem == modeList)
                 {
                     droneMode = _newIndex;

@@ -303,7 +303,8 @@ namespace vMenuClient
             presetsMenu.AddMenuItem(fpvCamPreset);
             presetsMenu.AddMenuItem(NFSCamPreset);
 
-            presetsMenu.OnItemSelect += (sender, item, index) => {
+            presetsMenu.OnItemSelect += (sender, item, index) =>
+            {
                 if (item == tandemCamPreset)
                 {
                     EnhancedCamera.Notify("~g~~h~Info~h~~s~: Switching to Tandem Camera 1.0. Tune XYZ offsets to your car.");
@@ -362,13 +363,15 @@ namespace vMenuClient
 
             MenuItem saveCamera = new MenuItem("Save Current Camera", "Save the current camera.");
             savedCamerasMenu.AddMenuItem(saveCamera);
-            savedCamerasMenu.OnMenuOpen += (sender) => {
+            savedCamerasMenu.OnMenuOpen += (sender) =>
+            {
                 savedCamerasMenu.ClearMenuItems();
                 savedCamerasMenu.AddMenuItem(saveCamera);
                 LoadCameras();
             };
 
-            savedCamerasMenu.OnItemSelect += (sender, item, index) => {
+            savedCamerasMenu.OnItemSelect += (sender, item, index) =>
+            {
                 if (item == saveCamera)
                 {
                     if (Game.PlayerPed.IsInVehicle())
@@ -395,11 +398,13 @@ namespace vMenuClient
             selectedCameraMenu.AddMenuItem(renameCamera);
             selectedCameraMenu.AddMenuItem(deleteCamera);
 
-            selectedCameraMenu.OnMenuClose += (sender) => {
+            selectedCameraMenu.OnMenuClose += (sender) =>
+            {
                 selectedCameraMenu.RefreshIndex();
             };
 
-            selectedCameraMenu.OnItemSelect += async (sender, item, index) => {
+            selectedCameraMenu.OnItemSelect += async (sender, item, index) =>
+            {
                 if (item == spawnCamera)
                 {
                     EnhancedCamera.ResetCameras();
@@ -450,7 +455,8 @@ namespace vMenuClient
             #region handling menu changes
 
             // Handle checkbox
-            menu.OnCheckboxChange += (_menu, _item, _index, _checked) => {
+            menu.OnCheckboxChange += (_menu, _item, _index, _checked) =>
+            {
                 if (_item == linearPosCheckbox)
                 {
                     linearPosOffset = _checked;
@@ -466,7 +472,8 @@ namespace vMenuClient
             };
 
             // Handle list change
-            menu.OnListIndexChange += (_menu, _listItem, _oldIndex, _newIndex, _itemIndex) => {
+            menu.OnListIndexChange += (_menu, _listItem, _oldIndex, _newIndex, _itemIndex) =>
+            {
                 if (_listItem == angCamModifierList)
                 {
                     angCamModifier = _newIndex * 0.025f + 0.0001f - 1f;

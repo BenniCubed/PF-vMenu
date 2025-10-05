@@ -109,7 +109,9 @@ namespace vMenuShared
             vmenu_enable_npc_density,
             vmenu_enable_replace_plates,
 
-            // Server-side key-value store
+            // Key-value store
+            vmenu_kvs_local_prefix,
+            vmenu_kvs_sync_local,
             vmenu_mysql_connection_string_var,
             vmenu_server_store,
         }
@@ -348,16 +350,16 @@ namespace vMenuShared
                         }
                         else
                         {
-                            #if CLIENT
+#if CLIENT
                             vMenuClient.Notify.Error($"Unable to load {lang}.json");
-                            #endif
+#endif
                         }
                     }
                     catch
                     {
-                        #if CLIENT
+#if CLIENT
                         vMenuClient.Notify.Error($"Unable to load {lang}.json");
-                        #endif
+#endif
                     }
                 }
             }

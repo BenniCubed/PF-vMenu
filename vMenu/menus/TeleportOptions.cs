@@ -67,7 +67,7 @@ namespace vMenuClient
                 }), false);
             }
 
-            if(IsAllowed(Permission.TPTeleportToPrev))
+            if (IsAllowed(Permission.TPTeleportToPrev))
             {
                 RegisterKeyMapping($"{GetSettingsString(Setting.vmenu_individual_server_id)}vMenu:overridePrevLocation", "Teleport: Override Prev. Location", "keyboard", "");
                 RegisterCommand($"{GetSettingsString(Setting.vmenu_individual_server_id)}vMenu:overridePrevLocation", new Action<dynamic, List<dynamic>, string>((dynamic source, List<dynamic> args, string rawCommand) =>
@@ -275,10 +275,10 @@ namespace vMenuClient
             var tpBtn = new MenuItem("Teleport", GetTpToString(tpLoc)).ToWrapped();
             tpBtn.Selected += async (_s, _args) =>
             {
-                    SetPrevTpLocation(tpLoc.coordinates, tpLoc.heading, safe: true);
-                    await TeleportToCoords(tpLoc.coordinates, true);
-                    SetEntityHeading(Game.PlayerPed.Handle, tpLoc.heading);
-                    SetGameplayCamRelativeHeading(0f);
+                SetPrevTpLocation(tpLoc.coordinates, tpLoc.heading, safe: true);
+                await TeleportToCoords(tpLoc.coordinates, true);
+                SetEntityHeading(Game.PlayerPed.Handle, tpLoc.heading);
+                SetGameplayCamRelativeHeading(0f);
             };
 
             var renBtn = new MenuItem("Rename", "Rename this teleport location.").ToWrapped();
@@ -327,9 +327,9 @@ namespace vMenuClient
             }
 
             var nums = new float[3];
-            for(int i = 0; i < 3; i++)
+            for (int i = 0; i < 3; i++)
             {
-                if(!float.TryParse(xyzStrs[i], out nums[i]))
+                if (!float.TryParse(xyzStrs[i], out nums[i]))
                 {
                     Notify.Error($"Could not parse \"{xyzStrs[i]}\" as number.");
                     return null;

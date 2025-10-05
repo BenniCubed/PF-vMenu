@@ -80,7 +80,7 @@ namespace vMenuClient
             SetNuiFocus(false, false);
             UserInputActive = false;
             UserInputResult = data["userInput"] as string;
-            cb(new {});
+            cb(new { });
         }
 
         [EventHandler("__cfx_nui:userInputCancel")]
@@ -89,7 +89,7 @@ namespace vMenuClient
             SetNuiFocus(false, false);
             UserInputActive = false;
             UserInputResult = null;
-            cb(new {});
+            cb(new { });
         }
 
         private bool firstSpawn = true;
@@ -273,23 +273,23 @@ namespace vMenuClient
         {
             if (type.ToLower() == "alert")
             {
-                 Notify.Alert(message, true, true);
+                Notify.Alert(message, true, true);
             }
             else if (type.ToLower() == "error")
             {
-                 Notify.Error(message, true, true);
+                Notify.Error(message, true, true);
             }
             else if (type.ToLower() == "info")
             {
-                 Notify.Info(message, true, true);
+                Notify.Info(message, true, true);
             }
             else if (type.ToLower() == "success")
             {
-                 Notify.Success(message, true, true);
+                Notify.Success(message, true, true);
             }
             else
             {
-                 Notify.Custom(message, true, true, type);
+                Notify.Custom(message, true, true, type);
             }
 
         }
@@ -395,14 +395,14 @@ namespace vMenuClient
             int veh = NetToVeh(vehNetId);
 
             // We apply thes flags
-            SetVehicleHandlingField( veh, "CCarHandlingData", "fBackEndPopUpCarImpulseMult", (int)0.100000 );
-            SetVehicleHandlingField( veh, "CCarHandlingData", "fBackEndPopUpBuildingImpulseMult", (int)0.030000 );
-            SetVehicleHandlingField( veh, "CCarHandlingData", "fBackEndPopUpMaxDeltaSpeed", (int)0.600000 );
+            SetVehicleHandlingField(veh, "CCarHandlingData", "fBackEndPopUpCarImpulseMult", (int)0.100000);
+            SetVehicleHandlingField(veh, "CCarHandlingData", "fBackEndPopUpBuildingImpulseMult", (int)0.030000);
+            SetVehicleHandlingField(veh, "CCarHandlingData", "fBackEndPopUpMaxDeltaSpeed", (int)0.600000);
 
-            SetVehicleHandlingField( veh, "CCarHandlingData", "strAdvancedFlags", 0x8000 + 0x4000000 );
+            SetVehicleHandlingField(veh, "CCarHandlingData", "strAdvancedFlags", 0x8000 + 0x4000000);
 
             // We enable or disable the suspension
-            SetReduceDriftVehicleSuspension( veh, status );
+            SetReduceDriftVehicleSuspension(veh, status);
 
         }
 

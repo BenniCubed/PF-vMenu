@@ -78,7 +78,7 @@ namespace vMenuClient
 
         public static void CopyToClipboard(string text)
         {
-            SendNuiMessage(JsonConvert.SerializeObject(new {type = "copyToClipboard", text}));
+            SendNuiMessage(JsonConvert.SerializeObject(new { type = "copyToClipboard", text }));
         }
 
         #region menu position
@@ -1654,7 +1654,7 @@ namespace vMenuClient
                 int primary = colors["primary"];
                 if (primary == CUSTOM_PAINT)
                 {
-                    SetVehicleCustomPrimaryColour(vehicle.Handle, colors["primaryr"], colors["primaryg"] , colors["primaryb"]);
+                    SetVehicleCustomPrimaryColour(vehicle.Handle, colors["primaryr"], colors["primaryg"], colors["primaryb"]);
                     SetVehicleCustomPrimaryPaintType(vehicle, colors["primaryf"]);
                 }
                 else
@@ -1665,7 +1665,7 @@ namespace vMenuClient
                 int secondary = colors["secondary"];
                 if (vehicleInfo.colors["secondary"] == CUSTOM_PAINT)
                 {
-                    SetVehicleCustomSecondaryColour(vehicle.Handle, colors["secondaryr"], colors["secondaryg"] , colors["secondaryb"]);
+                    SetVehicleCustomSecondaryColour(vehicle.Handle, colors["secondaryr"], colors["secondaryg"], colors["secondaryb"]);
                     SetVehicleCustomSecondaryPaintType(vehicle, colors["secondaryf"]);
                 }
                 else
@@ -2046,7 +2046,7 @@ namespace vMenuClient
                 Vehicle veh = GetVehicle();
 
                 // If the vehicle as the requirement to do this.
-                var StrAdvancedFlags = GetVehicleHandlingInt( veh.Handle, "CCarHandlingData", "strAdvancedFlags" );
+                var StrAdvancedFlags = GetVehicleHandlingInt(veh.Handle, "CCarHandlingData", "strAdvancedFlags");
                 if (StrAdvancedFlags == 0)
                 {
                     Notify.Error("This vehicle doesn't have the requirement to do this.", true, false);
@@ -2081,21 +2081,21 @@ namespace vMenuClient
             // and add it to the dictionary above, with the vehicle save name as the key.
             foreach (var saveName in savedVehicleNames)
             {
-            string jsonData = LoadResourceFile(GetCurrentResourceName(), "config/addons.json") ?? "{}";
-            var addons = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(jsonData);
-            var vehicleblacklist = new List<string>();
-            foreach (string addon in addons["vehicleblacklist"])
-            {
+                string jsonData = LoadResourceFile(GetCurrentResourceName(), "config/addons.json") ?? "{}";
+                var addons = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(jsonData);
+                var vehicleblacklist = new List<string>();
+                foreach (string addon in addons["vehicleblacklist"])
+                {
                     uint veh = (uint)GetHashKey(addon);
                     vehicleblacklist.Add(veh.ToString());
-            }
-                if (!vehicleblacklist.Any(x => x == StorageManager.GetSavedVehicleInfo(saveName).model.ToString() && !IsAllowed(Permission.VOVehiclesBlacklist)) )
-                    {
-
-                        vehiclesList.Add(saveName, StorageManager.GetSavedVehicleInfo(saveName));
-
-                    }
                 }
+                if (!vehicleblacklist.Any(x => x == StorageManager.GetSavedVehicleInfo(saveName).model.ToString() && !IsAllowed(Permission.VOVehiclesBlacklist)))
+                {
+
+                    vehiclesList.Add(saveName, StorageManager.GetSavedVehicleInfo(saveName));
+
+                }
+            }
             // Return the vehicle dictionary containing all vehicle save names (keys) linked to the correct vehicle
             // including all vehicle mods/customization parts.
             return vehiclesList;
@@ -2136,7 +2136,8 @@ namespace vMenuClient
         internal static string UserInputResult { private get; set; }
         private static async Task AcceptUserInput()
         {
-            SendNuiMessage(JsonConvert.SerializeObject(new {
+            SendNuiMessage(JsonConvert.SerializeObject(new
+            {
                 type = "userInput:accept"
             }));
 
@@ -2148,7 +2149,8 @@ namespace vMenuClient
 
         public async static Task CancelUserInput()
         {
-            SendNuiMessage(JsonConvert.SerializeObject(new {
+            SendNuiMessage(JsonConvert.SerializeObject(new
+            {
                 type = "userInput:cancel"
             }));
 
@@ -2201,7 +2203,8 @@ namespace vMenuClient
         {
             UserInputActive = true;
 
-            SendNuiMessage(JsonConvert.SerializeObject(new {
+            SendNuiMessage(JsonConvert.SerializeObject(new
+            {
                 type = "userInput:display",
                 labelText = windowTitle,
                 defaultText,
@@ -2943,8 +2946,8 @@ namespace vMenuClient
             public override bool Equals(object obj) => obj != null && GetType() == obj.GetType();
             public override int GetHashCode() => 0;
 
-            public static bool operator==(SpacerMarker marker, object obj) => marker.Equals(obj);
-            public static bool operator!=(SpacerMarker marker, object obj) => !marker.Equals(obj);
+            public static bool operator ==(SpacerMarker marker, object obj) => marker.Equals(obj);
+            public static bool operator !=(SpacerMarker marker, object obj) => !marker.Equals(obj);
         }
         public static MenuItem GetSpacerMenuItem(string title)
         {
@@ -3907,7 +3910,8 @@ namespace vMenuClient
 
         public static void TogglePracticeTimer(bool enable)
         {
-            SendNuiMessage(JsonConvert.SerializeObject(new {
+            SendNuiMessage(JsonConvert.SerializeObject(new
+            {
                 type = "practiceTimer:toggle",
                 enable
             }));
