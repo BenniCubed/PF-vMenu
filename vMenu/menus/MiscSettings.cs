@@ -218,6 +218,7 @@ namespace vMenuClient.menus
             var confirmEntityPosition = new MenuItem("Confirm Entity Position", "Stops placing entity and sets it at it current location.");
             var confirmAndDuplicate = new MenuItem("Confirm Entity Position And Duplicate", "Stops placing entity and sets it at it current location and creates new one to place.");
             var cancelEntity = new MenuItem("Cancel", "Deletes current entity and cancels its placement");
+            var copySpawnedToClipboard = new MenuItem("Copy To Clipboard", "Copy spawned entity info to clipboard.");
             var removeLastSpawnedEntity = new MenuItem("Undo Place", "Undo the placement of entities in reverse order.");
             var removeSpawnedEntities = new MenuItem("~y~Remove All~s~", "Deletes all entities placed by all players.");
 
@@ -599,6 +600,7 @@ namespace vMenuClient.menus
                 entitySpawnerMenu.AddMenuItem(confirmEntityPosition);
                 entitySpawnerMenu.AddMenuItem(confirmAndDuplicate);
                 entitySpawnerMenu.AddMenuItem(cancelEntity);
+                entitySpawnerMenu.AddMenuItem(copySpawnedToClipboard);
                 entitySpawnerMenu.AddMenuItem(removeLastSpawnedEntity);
                 entitySpawnerMenu.AddMenuItem(removeSpawnedEntities);
 
@@ -679,6 +681,10 @@ namespace vMenuClient.menus
                         {
                             Notify.Error("No entity to cancel!");
                         }
+                    }
+                    else if (item == copySpawnedToClipboard)
+                    {
+                        EntitySpawner.CopyEntitiesToClipboard();
                     }
                     else if (item == removeLastSpawnedEntity)
                     {

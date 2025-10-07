@@ -139,6 +139,17 @@ namespace vMenuClient
             TriggerServerEvent("vMenu:EntitySpawnerRemoveAll");
         }
 
+        public static void CopyEntitiesToClipboard()
+        {
+            TriggerServerEvent("vMenu:Req:EntitySpawnerCopyToClipboard");
+        }
+
+        [EventHandler("vMenu:Resp:EntitySpawnerCopyToClipboard")]
+        public void OnRespEntitySpawnerCopyToClipboard(string text)
+        {
+            CommonFunctions.CopyToClipboard(text);
+        }
+
         #endregion
 
         #region InternalMethods

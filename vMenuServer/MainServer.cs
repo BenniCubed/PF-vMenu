@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 using CitizenFX.Core;
@@ -656,7 +657,8 @@ namespace vMenuServer
             }
             else
             {
-                SetServerWeather(new TimeWeatherCommon.WeatherState{
+                SetServerWeather(new TimeWeatherCommon.WeatherState
+                {
                     WeatherType = value.Static.WeatherType,
                     Snow = value.Static.Snow,
                     Blackout = value.Static.Blackout,
@@ -1021,6 +1023,38 @@ namespace vMenuServer
                 }
             }
             playerEntities.Clear();
+        }
+
+        private static string PrintEntityInfo(StringBuilder sb, Entity e)
+        {
+            int hash = e.Model;
+            var coords = e.Position;
+            var rot = e.Rotation;
+
+            sb.AppendLine($"Hash: {hash} | {(uint)hash} | 0x{hash:X}");
+            sb.AppendLine($"Coords: X={coords.X}, Y={coords.Y}, Z={coords.Z}");
+            sb.AppendLine($"Rot: X={rot.X}, Y={rot.Y}, Z={rot.Z}");
+
+            return sb.ToString();
+        }
+
+        [EventHandler("vMenu:Req:EntitySpawnerCopyToClipboard")]
+        public void EntitySpawnerCopyToClipboard([FromSource] Player player)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var entities in playerEntities.Values)
+            {
+                if (entities == null)
+                    continue;
+
+                foreach (var entity in entities)
+                {
+                    PrintEntityInfo(sb, entity);
+                    sb.Append("\n");
+                }
+            }
+
+            player.TriggerEvent("vMenu:Resp:EntitySpawnerCopyToClipboard", sb.ToString());
         }
 
         [EventHandler("onResourceStop")]
