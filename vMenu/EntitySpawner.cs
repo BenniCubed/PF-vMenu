@@ -13,9 +13,13 @@ namespace vMenuClient
         public static bool Active { get; private set; } = false;
         public static Entity CurrentEntity { get; private set; } = null;
         private int scaleform = 0;
-        private readonly float rotateSpeed = 20f;
 
-        private const float RayDistance = 25f;
+        public static float RotationSnap { get; set; } = 15f;
+
+        public static bool PlaceOnGround { get; set; } = true;
+        public static bool AlignToSurface { get; set; } = false;
+        public static float PlacementDistance { get; set; } = 20f;
+        public static float PlacementRotation { get; set; } = 0f;
 
         public static bool SpawnDynamic { get; set; }
 
@@ -190,19 +194,26 @@ namespace vMenuClient
             var camCoords = GetGameplayCamCoord();
             var camDirection = RotationToDirection(camRotation);
 
+            var dist = PlaceOnGround ? 2000f : PlacementDistance;
+
             var dest = new Vector3(
-                camCoords.X + (camDirection.X * RayDistance),
-                camCoords.Y + (camDirection.Y * RayDistance),
-                camCoords.Z + (camDirection.Z * RayDistance)
+                camCoords.X + (camDirection.X * dist),
+                camCoords.Y + (camDirection.Y * dist),
+                camCoords.Z + (camDirection.Z * dist)
             );
 
-            var res = World.Raycast(camCoords, dest, IntersectOptions.Everything, Game.PlayerPed);
+            if (PlaceOnGround)
+            {
+                var res = World.Raycast(camCoords, dest, IntersectOptions.Everything, Game.PlayerPed);
 
 #if DEBUG
             DrawLine(Game.PlayerPed.Position.X, Game.PlayerPed.Position.Y, Game.PlayerPed.Position.Z, dest.X, dest.Y, dest.Z, 255, 0, 0, 255);
 #endif
 
-            return res.DitHit ? res.HitPosition : dest;
+                dest = res.DitHit ? res.HitPosition : dest;
+            }
+
+            return dest;
         }
 
         #endregion
@@ -232,7 +243,6 @@ namespace vMenuClient
                 }
             }
 
-            var headingOffset = 0f;
             while (Active)
             {
                 if (CurrentEntity == null || !CurrentEntity.Exists())
@@ -249,12 +259,12 @@ namespace vMenuClient
                 SetEntityInvincible(handle, true);
                 SetEntityCollision(handle, false, false);
                 SetEntityAlpha(handle, (int)(255 * 0.4), 0);
-                CurrentEntity.Heading = (GetGameplayCamRot(0).Z + headingOffset) % 360f;
+                CurrentEntity.Heading = (GetGameplayCamRot(0).Z + PlacementRotation) % 360f;
 
                 var newPosition = GetCoordsPlayerIsLookingAt();
 
                 CurrentEntity.Position = newPosition;
-                if (CurrentEntity.HeightAboveGround < 3.0f)
+                if (PlaceOnGround && AlignToSurface && CurrentEntity.HeightAboveGround < 3.0f)
                 {
                     if (CurrentEntity.Model.IsVehicle)
                     {
@@ -264,16 +274,6 @@ namespace vMenuClient
                     {
                         PlaceObjectOnGroundProperly(CurrentEntity.Handle);
                     }
-                }
-
-                // Controls
-                if (Game.IsControlPressed(0, Control.VehicleFlyRollLeftOnly))
-                {
-                    headingOffset += rotateSpeed * Game.LastFrameTime;
-                }
-                else if (Game.IsControlPressed(0, Control.VehicleFlyRollRightOnly))
-                {
-                    headingOffset -= rotateSpeed * Game.LastFrameTime;
                 }
 
                 await Delay(0);

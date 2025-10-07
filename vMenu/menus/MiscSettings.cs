@@ -206,6 +206,14 @@ namespace vMenuClient.menus
 
             // Entity spawner
             var spawnDynamicEntities = new MenuCheckboxItem("Spawn Dynamic Entities", "Check this to spawn dynamic (movable) entities. Otherwise static (frozen) entities are spawned.", false);
+            var rotationSnaps = new float[] { 1f, 5f, 10f, 15f, 45f, 90f };
+            var rotationSnap = new MenuListItem("Rotation Snap", rotationSnaps.Select(r => $"{r}°").ToList(), 3, "Sets the rotation snap amount when rotating the entity.");
+            var resetRotation = new MenuItem("Reset Rotation", "Reset the rotation");
+            var spawnEntityOnGround = new MenuCheckboxItem("Place On Ground", "If checked, the entity will be placed on the ground.", true);
+            var alignEntityToSurface = new MenuCheckboxItem("Align To Surface", "If checked, the entity will be aligned to the surface normal when placing it.", false);
+            var distances = new float[] { 5f, 10f, 20f, 30f, 40f, 50f, 100f, 200f, 300f, 400f, 500f };
+            var entityDistances = new MenuListItem("Entity Distance", distances.Select(d => $"{d}").ToList(), 2, "Sets the distance of the entity you're placing.");
+            entityDistances.Enabled = false;
             var spawnNewEntity = new MenuItem("Spawn New Entity", "Spawns entity into the world and lets you set its position and rotation");
             var confirmEntityPosition = new MenuItem("Confirm Entity Position", "Stops placing entity and sets it at it current location.");
             var confirmAndDuplicate = new MenuItem("Confirm Entity Position And Duplicate", "Stops placing entity and sets it at it current location and creates new one to place.");
@@ -581,8 +589,12 @@ namespace vMenuClient.menus
                 developerToolsMenu.AddMenuItem(entSpawnerMenuBtn);
                 MenuController.BindMenuItem(developerToolsMenu, entitySpawnerMenu, entSpawnerMenuBtn);
 
-
                 entitySpawnerMenu.AddMenuItem(spawnDynamicEntities);
+                entitySpawnerMenu.AddMenuItem(rotationSnap);
+                entitySpawnerMenu.AddMenuItem(resetRotation);
+                entitySpawnerMenu.AddMenuItem(spawnEntityOnGround);
+                entitySpawnerMenu.AddMenuItem(alignEntityToSurface);
+                entitySpawnerMenu.AddMenuItem(entityDistances);
                 entitySpawnerMenu.AddMenuItem(spawnNewEntity);
                 entitySpawnerMenu.AddMenuItem(confirmEntityPosition);
                 entitySpawnerMenu.AddMenuItem(confirmAndDuplicate);
@@ -590,9 +602,46 @@ namespace vMenuClient.menus
                 entitySpawnerMenu.AddMenuItem(removeLastSpawnedEntity);
                 entitySpawnerMenu.AddMenuItem(removeSpawnedEntities);
 
+                var rotateCmdName = (string dir) => $"{GetSettingsString(Setting.vmenu_individual_server_id)}vMenu:entitySpawner:rotate{dir}";
+                var rotateFn = (float amount) =>
+                {
+                    if (!EntitySpawner.Active || EntitySpawner.CurrentEntity == null)
+                    {
+                        return;
+                    }
+
+                    var rotation = EntitySpawner.PlacementRotation;
+                    rotation += amount;
+
+                    if (rotation >= 360f)
+                    {
+                        rotation -= 360f;
+                    }
+                    else if (rotation < 0f)
+                    {
+                        rotation += 360f;
+                    }
+
+                    EntitySpawner.PlacementRotation = rotation;
+                };
+                RegisterKeyMapping(rotateCmdName("left"), "vMenu Entity Rot Left", "keyboard", "Numpad1");
+                RegisterCommand(rotateCmdName("left"), new Action<int, List<object>, string>((source, args, raw) =>
+                {
+                    rotateFn(EntitySpawner.RotationSnap);
+                }), false);
+                RegisterKeyMapping(rotateCmdName("right"), "vMenu Entity Rot Right", "keyboard", "Numpad3");
+                RegisterCommand(rotateCmdName("right"), new Action<int, List<object>, string>((source, args, raw) =>
+                {
+                    rotateFn(-EntitySpawner.RotationSnap);
+                }), false);
+
                 entitySpawnerMenu.OnItemSelect += async (sender, item, index) =>
                 {
-                    if (item == spawnNewEntity)
+                    if (item == resetRotation)
+                    {
+                        EntitySpawner.PlacementRotation = 0f;
+                    }
+                    else if (item == spawnNewEntity)
                     {
                         if (EntitySpawner.CurrentEntity != null || EntitySpawner.Active)
                         {
@@ -640,11 +689,32 @@ namespace vMenuClient.menus
                         EntitySpawner.RemoveAll();
                     }
                 };
+                entitySpawnerMenu.OnListIndexChange += (sender, item, oldIndex, newIndex, itemIndex) =>
+                {
+                    if (item == entityDistances)
+                    {
+                        EntitySpawner.PlacementDistance = distances[newIndex];
+                    }
+                    else if (item == rotationSnap)
+                    {
+                        EntitySpawner.RotationSnap = rotationSnaps[newIndex];
+                    }
+                };
                 entitySpawnerMenu.OnCheckboxChange += (_sender, item, ix, checked_) =>
                 {
                     if (item == spawnDynamicEntities)
                     {
                         EntitySpawner.SpawnDynamic = checked_;
+                    }
+                    else if (item == spawnEntityOnGround)
+                    {
+                        EntitySpawner.PlaceOnGround = checked_;
+                        entityDistances.Enabled = !checked_;
+                        alignEntityToSurface.Enabled = checked_;
+                    }
+                    else if (item == alignEntityToSurface)
+                    {
+                        EntitySpawner.AlignToSurface = checked_;
                     }
                 };
             }
