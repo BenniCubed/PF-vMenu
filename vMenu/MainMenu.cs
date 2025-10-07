@@ -573,6 +573,9 @@ namespace vMenuClient
                 if (FunctionsController.IsMpCharEditorOpen())
                     return true;
 
+                if (NoClipEnabled)
+                    return true;
+
                 if (PlayerOptionsMenu != null && PlayerOptionsMenu.PlayerFrozen)
                     return true;
 
