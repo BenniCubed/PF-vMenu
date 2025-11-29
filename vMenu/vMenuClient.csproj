@@ -17,31 +17,31 @@
   </ItemGroup>
 
   <ItemGroup>
-    
+
     <Reference Include="MenuAPI">
       <HintPath>..\dependencies\client\MenuAPI.dll</HintPath>
       <Private>true</Private>
     </Reference>
 
     <Reference Include="Microsoft.CSharp" />
-    
-    <PackageReference Include="CitizenFX.Core.Client" Version="1.0.6370">
+
+    <PackageReference Include="CitizenFX.Core.Client" Version="1.0.22934">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
-    
+
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\dependencies\shared\Newtonsoft.Json.dll</HintPath>
       <Private>true</Private>
-  
+
 
     </Reference>
 
   </ItemGroup>
-  
+
   <ItemGroup>
     <Resource Include="data\overlays.json" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -49,7 +49,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
   </ItemGroup>
-  
+
   <ItemGroup>
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
