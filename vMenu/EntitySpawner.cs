@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 
 using CitizenFX.Core;
@@ -16,12 +17,28 @@ namespace vMenuClient
 
         public static float RotationSnap { get; set; } = 15f;
 
+        public static bool SetSpawnNetworked(bool value)
+        {
+            if (Active)
+            {
+                return false;
+            }
+
+            spawnNetworked = value;
+            return true;
+        }
+
         public static bool PlaceOnGround { get; set; } = true;
         public static bool AlignToSurface { get; set; } = false;
         public static float PlacementDistance { get; set; } = 20f;
         public static float PlacementRotation { get; set; } = 0f;
 
         public static bool SpawnDynamic { get; set; }
+
+
+        private static bool spawnNetworked;
+        private static Stack<bool> wereSpawnsNetworked = new Stack<bool>();
+        private static Stack<Entity> localEntities = new Stack<Entity>();
 
         /// <summary>
         /// Constructor.
@@ -85,15 +102,15 @@ namespace vMenuClient
             }
             if (IsModelAPed(model))
             {
-                handle = CreatePed(4, model, coords.X, coords.Y, coords.Z, Game.PlayerPed.Heading, true, true);
+                handle = CreatePed(4, model, coords.X, coords.Y, coords.Z, Game.PlayerPed.Heading, spawnNetworked, true);
             }
-            else if (IsModelAVehicle(model))
+            else if (IsModelAVehicle(model) && !spawnNetworked)
             {
                 handle = await CommonFunctions.SpawnVehicle(model, false, false, skipLoad: false, vehicleInfo: new CommonFunctions.VehicleInfo(), saveName: null, coords.X, coords.Y, coords.Z, Game.PlayerPed.Heading);
             }
             else
             {
-                handle = CreateObject((int)model, coords.X, coords.Y, coords.Z, true, true, true);
+                handle = CreateObject((int)model, coords.X, coords.Y, coords.Z, spawnNetworked, true, true);
             }
 
             CurrentEntity = Entity.FromHandle(handle);
@@ -114,7 +131,19 @@ namespace vMenuClient
         /// </summary>
         public static async void FinishPlacement(bool duplicate = false)
         {
-            TriggerServerEvent("vMenu:EntitySpawnerAdd", CurrentEntity.NetworkId);
+            if (CurrentEntity != null)
+            {
+                if (spawnNetworked)
+                {
+                    TriggerServerEvent("vMenu:EntitySpawnerAdd", CurrentEntity.NetworkId);
+                }
+                else
+                {
+                    localEntities.Push(CurrentEntity);
+                }
+                wereSpawnsNetworked.Push(spawnNetworked);
+            }
+
             if (duplicate)
             {
                 var hash = CurrentEntity.Model.Hash;
@@ -132,22 +161,60 @@ namespace vMenuClient
 
         public static void RemoveMostRecent()
         {
-            TriggerServerEvent("vMenu:EntitySpawnerRemoveMostRecent");
+            if (wereSpawnsNetworked.Count == 0)
+            {
+                return;
+            }
+
+            bool wasNetworked = wereSpawnsNetworked.Pop();
+            if (wasNetworked)
+            {
+                TriggerServerEvent("vMenu:EntitySpawnerRemoveMostRecent");
+            }
+            else
+            {
+                var entity = localEntities.Pop();
+                if (entity != null && entity.Exists())
+                {
+                    entity.Delete();
+                }
+            }
         }
         public static void RemoveAll()
         {
+            foreach (var entity in localEntities)
+            {
+                if (entity != null && entity.Exists())
+                {
+                    entity.Delete();
+                }
+            }
+            localEntities.Clear();
             TriggerServerEvent("vMenu:EntitySpawnerRemoveAll");
+            wereSpawnsNetworked.Clear();
         }
 
-        public static void CopyEntitiesToClipboard()
+        public async static Task CopyEntitiesToClipboard()
         {
-            TriggerServerEvent("vMenu:Req:EntitySpawnerCopyToClipboard");
-        }
+            StringBuilder sb = new StringBuilder();
+            foreach (var entity in localEntities)
+            {
+                sb.AppendLine(CommonFunctions.PrintEntityInfo(entity, false, true, true, false));
+            }
 
-        [EventHandler("vMenu:Resp:EntitySpawnerCopyToClipboard")]
-        public void OnRespEntitySpawnerCopyToClipboard(string text)
-        {
-            CommonFunctions.CopyToClipboard(text);
+            bool wait = true;
+            TriggerServerEvent("vMenu:EntitySpawnerCopyToClipboard", CallbackFactory.Create((string text) =>
+            {
+                sb.Append(text);
+                wait = false;
+            }));
+
+            while (wait)
+            {
+                await Delay(1);
+            }
+
+            CommonFunctions.CopyToClipboard(sb.ToString());
         }
 
         #endregion

@@ -19,6 +19,7 @@ namespace vMenuShared
 
             // General settings
             vmenu_server_name,
+            vmenu_menu_subtitle_color,
             vmenu_use_permissions,
             vmenu_menu_staff_only,
             vmenu_menu_toggle_key,

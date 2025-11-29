@@ -47,7 +47,12 @@ namespace vMenuClient.menus
         private static readonly LanguageManager Lm = new LanguageManager();
 
 
-
+        private static Dictionary<int, int> newPedDrawableDefaults = new Dictionary<int, int>
+        {
+            {3, 15},
+            {8, 15},
+            {11, 15},
+        };
         /// <summary>
         /// Makes or updates the character creator menu. Also has an option to load data from the <see cref="currentCharacter"/> data, to allow for editing an existing ped.
         /// </summary>
@@ -66,9 +71,14 @@ namespace vMenuClient.menus
                 currentCharacter.ModelHash = male ? (uint)GetHashKey("mp_m_freemode_01") : (uint)GetHashKey("mp_f_freemode_01");
                 currentCharacter.IsMale = male;
 
-                SetPedComponentVariation(Game.PlayerPed.Handle, 3, 15, 0, 0);
-                SetPedComponentVariation(Game.PlayerPed.Handle, 8, 15, 0, 0);
-                SetPedComponentVariation(Game.PlayerPed.Handle, 11, 15, 0, 0);
+                foreach (var drawableDefault in newPedDrawableDefaults)
+                {
+                    int component = drawableDefault.Key;
+                    int drawable = drawableDefault.Value;
+
+                    SetPedComponentVariation(Game.PlayerPed.Handle, component, drawable, 0, 0);
+                    currentCharacter.DrawableVariations.clothes[component] = new KeyValuePair<int, int>(drawable, 0);
+                }
             }
             currentCharacter.DrawableVariations.clothes ??= new Dictionary<int, KeyValuePair<int, int>>();
             currentCharacter.PropVariations.props ??= new Dictionary<int, KeyValuePair<int, int>>();

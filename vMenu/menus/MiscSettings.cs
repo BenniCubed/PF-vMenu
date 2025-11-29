@@ -93,31 +93,6 @@ namespace vMenuClient.menus
 
         private static readonly LanguageManager Lm = new LanguageManager();
 
-        private string PrintEntityInfo(Entity e, bool printHandle, bool printHash, bool printCoords, bool printOwner)
-        {
-            int hash = e.Model.Hash;
-            var coords = e.Position;
-            var rot = e.Rotation;
-
-            StringBuilder sb = new StringBuilder();
-            if (printHandle)
-                sb.AppendLine($"Handle: {e.Handle}");
-
-            if (printHash)
-                sb.AppendLine($"Hash: {hash} | {(uint)hash} | 0x{hash:X}");
-
-            if (printCoords)
-            {
-                sb.AppendLine($"Coords: X={coords.X}, Y={coords.Y}, Z={coords.Z}");
-                sb.AppendLine($"Rot: X={rot.X}, Y={rot.Y}, Z={rot.Z}");
-            }
-
-            if (printOwner)
-                sb.AppendLine($"Owner: {NetworkGetEntityOwner(e.Handle)}");
-
-            return sb.ToString();
-        }
-
         /// <summary>
         /// Creates the menu.
         /// </summary>
@@ -205,7 +180,8 @@ namespace vMenuClient.menus
             ResetIndex = new MenuCheckboxItem("Reset Index", "Resets index once you go to main menu.", false);
 
             // Entity spawner
-            var spawnDynamicEntities = new MenuCheckboxItem("Spawn Dynamic Entities", "Check this to spawn dynamic (movable) entities. Otherwise static (frozen) entities are spawned.", false);
+            var spawnNetworkedEntities = new MenuCheckboxItem("Spawn Networked Entities", "If enabled spawns networked entities. Otherwise local entities are spawned. ~y~Networked entities are limited! Spawning too many, the server will (silently) fail to properly keep track of them!~s~");
+            var spawnDynamicEntities = new MenuCheckboxItem("Spawn Dynamic Entities", "If enabled spawns dynamic (movable) entities. Otherwise static (frozen) entities are spawned.", false);
             var rotationSnaps = new float[] { 1f, 5f, 10f, 15f, 45f, 90f };
             var rotationSnap = new MenuListItem("Rotation Snap", rotationSnaps.Select(r => $"{r}°").ToList(), 3, "Sets the rotation snap amount when rotating the entity.");
             var resetRotation = new MenuItem("Reset Rotation", "Reset the rotation");
@@ -286,7 +262,7 @@ namespace vMenuClient.menus
             {
                 if (item == quitGame)
                 {
-                    QuitGame();
+                    CommonFunctions.QuitGame();
                 }
                 else if (item == quitSession)
                 {
@@ -590,6 +566,7 @@ namespace vMenuClient.menus
                 developerToolsMenu.AddMenuItem(entSpawnerMenuBtn);
                 MenuController.BindMenuItem(developerToolsMenu, entitySpawnerMenu, entSpawnerMenuBtn);
 
+                entitySpawnerMenu.AddMenuItem(spawnNetworkedEntities);
                 entitySpawnerMenu.AddMenuItem(spawnDynamicEntities);
                 entitySpawnerMenu.AddMenuItem(rotationSnap);
                 entitySpawnerMenu.AddMenuItem(resetRotation);
@@ -684,7 +661,7 @@ namespace vMenuClient.menus
                     }
                     else if (item == copySpawnedToClipboard)
                     {
-                        EntitySpawner.CopyEntitiesToClipboard();
+                        await EntitySpawner.CopyEntitiesToClipboard();
                     }
                     else if (item == removeLastSpawnedEntity)
                     {
@@ -708,7 +685,16 @@ namespace vMenuClient.menus
                 };
                 entitySpawnerMenu.OnCheckboxChange += (_sender, item, ix, checked_) =>
                 {
-                    if (item == spawnDynamicEntities)
+                    if (item == spawnNetworkedEntities)
+                    {
+                        bool old = !checked_;
+                        if (!EntitySpawner.SetSpawnNetworked(checked_))
+                        {
+                            spawnNetworkedEntities.Checked = old;
+                            Notify.Error("Cannot change networked mode while placing entity is in progress.");
+                        }
+                    }
+                    else if (item == spawnDynamicEntities)
                     {
                         EntitySpawner.SpawnDynamic = checked_;
                     }
@@ -952,8 +938,10 @@ namespace vMenuClient.menus
             {
                 if (item == copyCoordinates)
                 {
-                    var pos = Game.PlayerPed.Position;
-                    CopyToClipboard($"X={pos.X}, Y={pos.Y}, Z={pos.Z}");
+                    var ped = Game.PlayerPed;
+                    var pos = ped.Position;
+                    var heading = ped.Heading;
+                    CopyToClipboard($"X={pos.X}, Y={pos.Y}, Z={pos.Z}, H={heading}");
                     Notify.Info("Coordinates copied to the clipboard.");
                 }
                 // export data

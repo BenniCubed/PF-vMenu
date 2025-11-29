@@ -162,17 +162,17 @@ namespace vMenuServer
                     else
                     {
                         // Add event handlers.
-                        EventHandlers.Add("vMenu:GetPlayerIdentifiers", new Action<int, NetworkCallbackDelegate>((TargetPlayer, CallbackFunction) =>
+                        EventHandlers.Add("vMenu:GetPlayerIdentifiers", new Action<Player, object>(([FromSource] Player player, object callback) =>
                         {
                             var data = new List<string>();
-                            Players[TargetPlayer].Identifiers.ToList().ForEach(e =>
+                            player.Identifiers.ToList().ForEach(e =>
                             {
                                 if (!e.Contains("ip:"))
                                 {
                                     data.Add(e);
                                 }
                             });
-                            CallbackFunction(JsonConvert.SerializeObject(data));
+                            callback.InvokeAsCallback(player, data);
                         }));
                         EventHandlers.Add("vMenu:RequestPermissions", new Action<Player>(PermissionsManager.SetPermissionsForPlayer));
                         EventHandlers.Add("vMenu:RequestServerState", new Action<Player>(RequestServerStateFromPlayer));
@@ -856,19 +856,19 @@ namespace vMenuServer
         }
 
         [EventHandler("vMenu:GetPlayerCoords")]
-        internal void GetPlayerCoords([FromSource] Player source, int playerId, NetworkCallbackDelegate callback)
+        internal void GetPlayerCoords([FromSource] Player source, int playerId, object callback)
         {
             if (IsPlayerAceAllowed(source.Handle, "vMenu.OnlinePlayers.Teleport") || IsPlayerAceAllowed(source.Handle, "vMenu.Everything") ||
                 IsPlayerAceAllowed(source.Handle, "vMenu.OnlinePlayers.All"))
             {
                 var coords = Players[playerId]?.Character?.Position ?? Vector3.Zero;
 
-                _ = callback(coords);
+                callback.InvokeAsCallback(source, coords);
 
                 return;
             }
 
-            _ = callback(Vector3.Zero);
+            callback.InvokeAsCallback(source, Vector3.Zero);
         }
         #endregion
 
@@ -980,7 +980,7 @@ namespace vMenuServer
                 entities = playerEntities[license] = new Stack<Entity>();
             }
             var entity = Entity.FromNetworkId(entityId);
-            if (entity != null)
+            if (entity != null && DoesEntityExist(entity.Handle))
             {
                 entities.Push(entity);
             }
@@ -1034,12 +1034,13 @@ namespace vMenuServer
             sb.AppendLine($"Hash: {hash} | {(uint)hash} | 0x{hash:X}");
             sb.AppendLine($"Coords: X={coords.X}, Y={coords.Y}, Z={coords.Z}");
             sb.AppendLine($"Rot: X={rot.X}, Y={rot.Y}, Z={rot.Z}");
+            sb.AppendLine();
 
             return sb.ToString();
         }
 
-        [EventHandler("vMenu:Req:EntitySpawnerCopyToClipboard")]
-        public void EntitySpawnerCopyToClipboard([FromSource] Player player)
+        [EventHandler("vMenu:EntitySpawnerCopyToClipboard")]
+        public void EntitySpawnerCopyToClipboard([FromSource] Player player, object callback)
         {
             StringBuilder sb = new StringBuilder();
             foreach (var entities in playerEntities.Values)
@@ -1049,12 +1050,14 @@ namespace vMenuServer
 
                 foreach (var entity in entities)
                 {
-                    PrintEntityInfo(sb, entity);
-                    sb.Append("\n");
+                    if (entity != null && DoesEntityExist(entity.Handle))
+                    {
+                        PrintEntityInfo(sb, entity);
+                    }
                 }
             }
 
-            player.TriggerEvent("vMenu:Resp:EntitySpawnerCopyToClipboard", sb.ToString());
+            callback.InvokeAsCallback(player, sb.ToString());
         }
 
         [EventHandler("onResourceStop")]

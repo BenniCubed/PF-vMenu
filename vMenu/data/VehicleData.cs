@@ -365,7 +365,7 @@ namespace vMenuClient.data
         private static void LoadAddonData()
         {
             addonVehicles = new HashSet<string>();
-            vehicleDisablelist= new HashSet<string>();
+            vehicleDisablelist = new HashSet<string>();
             vehicleBlacklist = new HashSet<string>();
 
             void FillAddonSet(Dictionary<string, List<string>> addonData, string listName, HashSet<string> set)
@@ -374,7 +374,7 @@ namespace vMenuClient.data
                 if (!addonData.TryGetValue(listName, out list))
                     return;
 
-                foreach(var addon in list)
+                foreach (var addon in list)
                 {
                     if (!IsModelInCdimage((uint)GetHashKey(addon)))
                     {
@@ -622,7 +622,7 @@ namespace vMenuClient.data
         }
 
 
-        public static Tuple<string,string,string> GetDigitsNondigitsRest(string s)
+        public static Tuple<string, string, string> GetDigitsNondigitsRest(string s)
         {
             int i = 0;
             for (; i < s.Length && char.IsDigit(s[i]); ++i) ;
@@ -630,7 +630,7 @@ namespace vMenuClient.data
             string digits = s.Substring(0, i);
 
             int k = i;
-            for(; i < s.Length && !char.IsDigit(s[i]); ++i) ;
+            for (; i < s.Length && !char.IsDigit(s[i]); ++i) ;
 
             string nondigits = s.Substring(k, i - k);
             string rest = s.Substring(i);
@@ -706,7 +706,7 @@ namespace vMenuClient.data
             if (!hasYear)
                 return new Tuple<string, string>("", name);
 
-            return new Tuple<string, string>(name.Substring(0,4), name.Substring(5));
+            return new Tuple<string, string>(name.Substring(0, 4), name.Substring(5));
         }
 
         public static int CompareVehicleNames(string name1, string name2)
@@ -801,9 +801,9 @@ namespace vMenuClient.data
         }
 
 
-        private static Dictionary<int,int> compareVehicleClassDict =
-            new int[]{0,3,4,9,22,1,6,5,7,2,12,8,15,16,14,20,18,10,19,17,11,13,21}
-                .Select((num, ix) => new KeyValuePair<int,int>(num,ix))
+        private static Dictionary<int, int> compareVehicleClassDict =
+            new int[] { 0, 3, 4, 9, 22, 1, 6, 5, 7, 2, 12, 8, 15, 16, 14, 20, 18, 10, 19, 17, 11, 13, 21 }
+                .Select((num, ix) => new KeyValuePair<int, int>(num, ix))
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
         public static int CompareClasses(int i1, int i2) =>
             compareVehicleClassDict[i1].CompareTo(compareVehicleClassDict[i2]);
@@ -822,10 +822,10 @@ namespace vMenuClient.data
             {
                 Name = name;
                 Vehicles = new List<VehicleModelInfo>();
-                foreach(var shortname in shortnames)
+                foreach (var shortname in shortnames)
                 {
                     VehicleModelInfo vi;
-                    if(AllVehicles.TryGetValue(shortname, out vi))
+                    if (AllVehicles.TryGetValue(shortname, out vi))
                     {
                         Vehicles.Add(vi);
                     }

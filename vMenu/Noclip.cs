@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using CitizenFX.Core;
@@ -10,28 +11,32 @@ namespace vMenuClient
 {
     public class NoClip : BaseScript
     {
+        private static List<Tuple<string, float>> speeds = new List<Tuple<string, float>>
+        {
+            new Tuple<string, float>("Super Slow", 20.0f),
+            new Tuple<string, float>("Very Slow", 50.0f),
+            new Tuple<string, float>("Slow", 100.0f),
+            new Tuple<string, float>("Normal", 250.0f),
+            new Tuple<string, float>("Fast", 1000.0f),
+            new Tuple<string, float>("Very Fast", 2000.0f),
+            new Tuple<string, float>("Super Fast", 4000.0f),
+            new Tuple<string, float>("Lightning Fast", 10000.0f),
+        };
+        private static Dictionary<string, int> speedsMap = speeds
+            .Select((t, i) => new Tuple<string, int>(t.Item1, i))
+            .ToDictionary(t => t.Item1, t => t.Item2);
+
         private static bool NoclipActive { get; set; } = false;
-        private static int MovingSpeed { get; set; } = 0;
+        private static int MovingSpeed { get; set; } = speedsMap["Normal"];
         private static int Scale { get; set; } = -1;
         private static bool FollowCamMode { get; set; } = true;
         private static bool FlyCamMode { get; set; } = true;
 
-
-        private List<string> speeds = new List<string>()
-        {
-            "Very Slow | 1/8",
-            "Slow | 2/8",
-            "Normal | 3/8",
-            "Fast | 4/8",
-            "Very Fast | 5/8",
-            "Extremely Fast | 6/8",
-            "Extremely Fast v2.0 | 7/8",
-            "Max Speed | 8/8"
-        };
-
         public NoClip()
         {
             Tick += NoClipHandler;
+
+            Vector3 prevPos = Player.Local.Character.Position;
         }
 
         internal static void SetNoclipActive(bool active)
@@ -47,7 +52,7 @@ namespace vMenuClient
         {
             uint hash = 0;
             string str = command.ToLower();
-            
+
             for (int i = 0; i < str.Length; i++)
             {
                 uint letter = (uint)str[i];
@@ -55,21 +60,21 @@ namespace vMenuClient
                 hash += (hash << 10);
                 hash ^= (hash >> 6);
             }
-    
+
             hash += (hash << 3);
             if (hash < 0)
             {
                 hash = (uint)((int)hash);
             }
-    
+
             hash ^= (hash >> 11);
             hash += (hash << 15);
-    
+
             if (hash < 0)
             {
                 hash = (uint)((int)hash);
             }
-    
+
             return hash.ToString("X");
         }
         private async Task NoClipHandler()
@@ -97,42 +102,53 @@ namespace vMenuClient
 
                     BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
                     ScaleformMovieMethodAddParamInt(0);
-                    PushScaleformMovieMethodParameterString("~INPUT_SPRINT~");
-                    PushScaleformMovieMethodParameterString($"Change Speed ({speeds[MovingSpeed]})");
+                    PushScaleformMovieMethodParameterString($"{speeds[MovingSpeed].Item1}");
                     EndScaleformMovieMethod();
 
                     BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
                     ScaleformMovieMethodAddParamInt(1);
-                    PushScaleformMovieMethodParameterString("~INPUT_MOVE_LR~");
-                    PushScaleformMovieMethodParameterString($"Turn Left/Right");
+                    PushScaleformMovieMethodParameterString("~INPUT_SPRINT~");
+                    PushScaleformMovieMethodParameterString($"Faster");
                     EndScaleformMovieMethod();
 
                     BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
                     ScaleformMovieMethodAddParamInt(2);
+                    PushScaleformMovieMethodParameterString("~INPUT_JUMP~");
+                    PushScaleformMovieMethodParameterString($"Slower");
+                    EndScaleformMovieMethod();
+
+                    BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
+                    ScaleformMovieMethodAddParamInt(3);
+                    PushScaleformMovieMethodParameterString("~INPUT_MOVE_LR~");
+                    PushScaleformMovieMethodParameterString($"Left/Right");
+                    EndScaleformMovieMethod();
+
+                    BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
+                    ScaleformMovieMethodAddParamInt(4);
                     PushScaleformMovieMethodParameterString("~INPUT_MOVE_UD~");
                     PushScaleformMovieMethodParameterString($"Move");
                     EndScaleformMovieMethod();
 
                     BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
-                    ScaleformMovieMethodAddParamInt(3);
+                    ScaleformMovieMethodAddParamInt(5);
                     PushScaleformMovieMethodParameterString("~INPUT_MULTIPLAYER_INFO~");
                     PushScaleformMovieMethodParameterString($"Down");
                     EndScaleformMovieMethod();
 
                     BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
-                    ScaleformMovieMethodAddParamInt(4);
+                    ScaleformMovieMethodAddParamInt(6);
                     PushScaleformMovieMethodParameterString("~INPUT_COVER~");
                     PushScaleformMovieMethodParameterString($"Up");
                     EndScaleformMovieMethod();
 
                     BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
-                    ScaleformMovieMethodAddParamInt(5);
+                    ScaleformMovieMethodAddParamInt(7);
                     PushScaleformMovieMethodParameterString("~INPUT_VEH_HEADLIGHT~");
                     PushScaleformMovieMethodParameterString($"Cam Mode");
                     EndScaleformMovieMethod();
 
                     BeginScaleformMovieMethod(Scale, "SET_DATA_SLOT");
-                    ScaleformMovieMethodAddParamInt(6);
+                    ScaleformMovieMethodAddParamInt(8);
                     PushScaleformMovieMethodParameterString($"~INPUT_{HashString($"{vMenuShared.ConfigManager.GetSettingsString(vMenuShared.ConfigManager.Setting.vmenu_individual_server_id)}vMenu:NoClip")}~");
                     PushScaleformMovieMethodParameterString($"Toggle NoClip");
                     EndScaleformMovieMethod();
@@ -222,30 +238,26 @@ namespace vMenuClient
                 {
                     if (Game.IsControlJustPressed(0, Control.Sprint))
                     {
-                        MovingSpeed++;
-                        if (MovingSpeed == speeds.Count)
-                        {
-                            MovingSpeed = 0;
-                        }
-                        if (vMenuShared.ConfigManager.GetSettingsString(vMenuShared.ConfigManager.Setting.vmenu_notification_type).ToLower() == "mosh")
-                        {
-                            TriggerEvent("mosh_notify:notify", "SUCCESS", $"<span class=\"text-white\">Your NoClip speed is: {speeds[MovingSpeed]}.</span>", "success", "success", 3000);
-                        }
+                        MovingSpeed = Math.Min(MovingSpeed + 1, speeds.Count - 1);
+                    }
+                    else if (Game.IsControlJustPressed(0, Control.Jump))
+                    {
+                        MovingSpeed = Math.Max(0, MovingSpeed - 1);
                     }
 
                     if (Game.IsDisabledControlPressed(0, Control.MoveUpOnly))
                     {
-                        yoff = 0.5f;
+                        yoff = 1f;
                     }
                     if (Game.IsDisabledControlPressed(0, Control.MoveDownOnly))
                     {
-                        yoff = -0.5f;
+                        yoff = -1f;
                     }
                     if (Game.IsDisabledControlPressed(0, Control.MoveLeftOnly))
                     {
                         if (FlyCamMode && FollowCamMode)
                         {
-                            xoff = -0.5f;
+                            xoff = -1f;
                         }
                         else if (!FollowCamMode)
                         {
@@ -256,7 +268,7 @@ namespace vMenuClient
                     {
                         if (FlyCamMode && FollowCamMode)
                         {
-                            xoff = 0.5f;
+                            xoff = 1f;
                         }
                         else if (!FollowCamMode)
                         {
@@ -265,11 +277,11 @@ namespace vMenuClient
                     }
                     if (Game.IsDisabledControlPressed(0, Control.Cover))
                     {
-                        zoff = 0.21f;
+                        zoff = 0.5f;
                     }
                     if (Game.IsDisabledControlPressed(0, Control.MultiplayerInfo))
                     {
-                        zoff = -0.21f;
+                        zoff = -0.5f;
                     }
                     if (Game.IsDisabledControlJustPressed(0, Control.VehicleHeadlight))
                     {
@@ -289,19 +301,15 @@ namespace vMenuClient
                     }
                 }
 
-                float moveSpeed = MovingSpeed;
-                if (MovingSpeed > speeds.Count / 2)
-                {
-                    moveSpeed *= 1.8f;
-                }
-                moveSpeed = moveSpeed / (1f / GetFrameTime()) * 60;
-                float num = (FlyCamMode ? MathUtil.DegreesToRadians(GetGameplayCamRelativePitch()) : 0f);
-                float rotxy = (float)Math.Cos((double)num);
-                float rotz = (float)Math.Sin((double)num);
-                xoff *= rotxy;
-                yoff *= rotxy;
-                zoff += rotz * yoff;
-                newPos = GetOffsetFromEntityInWorldCoords(noclipEntity, xoff * (moveSpeed + 0.3f), yoff * (moveSpeed + 0.3f), zoff * (moveSpeed + 0.3f));
+                float relPitch = FlyCamMode ? MathUtil.DegreesToRadians(GetGameplayCamRelativePitch()) : 0f;
+                float factorxy = (float)Math.Cos((double)relPitch);
+                float factorz = (float)Math.Sin((double)relPitch);
+
+                Vector3 off = new Vector3(factorxy * xoff, factorxy * yoff, zoff + factorz * yoff);
+                off.Normalize();
+                off *= GetFrameTime() * speeds[MovingSpeed].Item2 / 3.6f;
+
+                newPos = GetOffsetFromEntityInWorldCoords(noclipEntity, off.X, off.Y, off.Z);
                 var heading = GetEntityHeading(noclipEntity);
 
                 SetEntityVelocity(noclipEntity, 0f, 0f, 0f);

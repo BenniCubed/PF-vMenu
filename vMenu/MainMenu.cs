@@ -102,6 +102,25 @@ namespace vMenuClient
         private static readonly LanguageManager Lm = new LanguageManager();
         #endregion
 
+        private void SetDefaultMenuAppearance()
+        {
+            const string texture_dict = "vmenu_textures";
+            const string texture_name = "menu_header_background";
+
+            var txd = CreateRuntimeTxd(texture_dict);
+            CreateRuntimeTextureFromImage(txd, texture_name, "menu-header-background.png");
+
+            MenuController._texture_dict = texture_dict;
+            MenuController._header_texture = texture_name;
+
+            var subtitleColor = GetSettingsString(Setting.vmenu_menu_subtitle_color);
+            if (string.IsNullOrEmpty(subtitleColor))
+            {
+                subtitleColor = "HUD_COLOUR_FREEMODE";
+            }
+            MenuController._menu_subtitle_color = $"~{subtitleColor}~";
+        }
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -111,6 +130,8 @@ namespace vMenuClient
 
             // Get the languages.
             LanguageManager.Languages = GetLanguages();
+
+            SetDefaultMenuAppearance();
 
             #region cleanup unused kvps
             var tmp_kvp_handle = StartFindKvp("");
@@ -192,20 +213,31 @@ namespace vMenuClient
                    }
                }), false);
 
+            Debug.WriteLine("[INFO] Registering vMenu toggle command.");
+            bool openCloseLogged = false;
             RegisterCommand($"{GetSettingsString(Setting.vmenu_individual_server_id)}vMenu:toggle", new Action<dynamic, List<dynamic>, string>((dynamic source, List<dynamic> args, string rawCommand) =>
-               {
-                   if (!vMenuEnabled || Menu == null)
-                       return;
+            {
+                if (!vMenuEnabled || Menu == null)
+                {
+                    Debug.WriteLine($"[INFO] You cannot open vMenu right now; {(Menu == null ? "the menu does not exist" : "vMenu disabled")}.");
+                    return;
+                }
 
-                   if (!MenuController.IsAnyMenuOpen())
-                   {
-                       Menu.Menu.OpenMenu();
-                   }
-                   else
-                   {
-                       MenuController.CloseAllMenus();
-                   }
-               }), false);
+                if (!openCloseLogged)
+                {
+                    Debug.WriteLine($"[INFO] Opening/closing vMenu.");
+                    openCloseLogged = true;
+                }
+
+                if (!MenuController.IsAnyMenuOpen())
+                {
+                    Menu.Menu.OpenMenu();
+                }
+                else
+                {
+                    MenuController.CloseAllMenus();
+                }
+            }), false);
             if (!(GetSettingsString(Setting.vmenu_menu_toggle_key) == null))
             {
                 vMenuKey = GetSettingsString(Setting.vmenu_menu_toggle_key);
@@ -215,6 +247,7 @@ namespace vMenuClient
                 vMenuKey = "M";
             }
 
+            Debug.WriteLine("[INFO] Registering vMenu toggle key mapping.");
             RegisterKeyMapping($"{GetSettingsString(Setting.vmenu_individual_server_id)}vMenu:toggle", "Menu Open/Close", "keyboard", vMenuKey);
             #endregion
 
@@ -611,14 +644,13 @@ namespace vMenuClient
             var completed = false;
 
             // TODO: replace with client<->server RPC once implemented in CitizenFX!
-            Func<Vector3, bool> CallbackFunction = (data) =>
+            Action<Vector3> CallbackFunction = (data) =>
             {
                 coords = data;
                 completed = true;
-                return true;
             };
 
-            TriggerServerEvent("vMenu:GetPlayerCoords", serverId, CallbackFunction);
+            TriggerServerEvent("vMenu:GetPlayerCoords", serverId, CallbackFactory.Create(CallbackFunction));
 
             while (!completed)
             {
@@ -715,6 +747,8 @@ namespace vMenuClient
             // Add the main menu to the menu pool.
             MenuController.AddMenu(Menu.Menu);
             MenuController.MainMenu = Menu.Menu;
+
+            MenuController.MainMenu.HeaderTexture = new KeyValuePair<string, string>("vmenu_textures", "menu_header_background");
 
             // Waiting 2 seconds maybe avoids car names not being query-able using GetLabelText(), etc. right away
             await Delay(2000);

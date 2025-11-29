@@ -23,7 +23,7 @@ namespace vMenuServer
         {
             if (key.StartsWith("prefix:"))
             {
-                throw new InvalidOperationException($"Key cannot start with 'prefix:'");
+                throw new InvalidOperationException($"Key '{key}' cannot start with 'prefix:'");
             }
 
             if (!string.IsNullOrEmpty(localPrefix))
@@ -206,6 +206,11 @@ namespace vMenuServer
                     break;
 
                 key = UnprefixLocalKey(key);
+                if (key.StartsWith("prefix:"))
+                {
+                    continue;
+                }
+
                 var vi = Get(key);
                 if (type is null || vi.Type == type)
                     keyValues[key] = vi;

@@ -121,14 +121,16 @@ namespace vMenuClient.menus
 
         private void PrintIdentifiers()
         {
-            Func<string, string> CallbackFunction = (data) =>
+            Action<List<string>> CallbackFunction = (data) =>
             {
-                Debug.WriteLine(data);
-                var ids = string.Join("~n~", JsonConvert.DeserializeObject<string[]>(data));
+                foreach (var id in data)
+                {
+                    Debug.WriteLine(id);
+                }
+                var ids = string.Join("~n~", data);
                 Notify.Custom($"~b~{GetSafePlayerName(currentPlayer.Name)}~s~'s Identifiers:~n~{ids}", false);
-                return data;
             };
-            BaseScript.TriggerServerEvent("vMenu:GetPlayerIdentifiers", currentPlayer.ServerId, CallbackFunction);
+            BaseScript.TriggerServerEvent("vMenu:GetPlayerIdentifiers", CallbackFactory.Create(CallbackFunction));
         }
 
         private void TryBanPlayer(IPlayer player, bool forever)

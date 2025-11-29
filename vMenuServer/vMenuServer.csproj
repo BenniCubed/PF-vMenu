@@ -76,6 +76,9 @@
     <None Update="main.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="menu-header-background.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="*.lua">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

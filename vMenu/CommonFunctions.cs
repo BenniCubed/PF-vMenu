@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 using CitizenFX.Core;
@@ -40,7 +41,7 @@ namespace vMenuClient
         #region Menu title
         public static string MenuTitle
         {
-            get => GetSettingsString(Setting.vmenu_server_name, GetPlayerName(-1));
+            get => GetSettingsString(Setting.vmenu_server_name, GetPlayerName(-1)) ?? " ";
         }
         #endregion
 
@@ -84,6 +85,31 @@ namespace vMenuClient
         #region menu position
         public static bool RightAlignMenus() => UserDefaults.MiscRightAlignMenu;
         #endregion
+
+        public static string PrintEntityInfo(Entity e, bool printHandle, bool printHash, bool printCoords, bool printOwner)
+        {
+            int hash = e.Model.Hash;
+            var coords = e.Position;
+            var rot = e.Rotation;
+
+            StringBuilder sb = new StringBuilder();
+            if (printHandle)
+                sb.AppendLine($"Handle: {e.Handle}");
+
+            if (printHash)
+                sb.AppendLine($"Hash: {hash} | {(uint)hash} | 0x{hash:X}");
+
+            if (printCoords)
+            {
+                sb.AppendLine($"Coords: X={coords.X}, Y={coords.Y}, Z={coords.Z}");
+                sb.AppendLine($"Rot: X={rot.X}, Y={rot.Y}, Z={rot.Z}");
+            }
+
+            if (printOwner)
+                sb.AppendLine($"Owner: {NetworkGetEntityOwner(e.Handle)}");
+
+            return sb.ToString();
+        }
 
         #region Toggle vehicle alarm
         public static void ToggleVehicleAlarm(Vehicle vehicle)
