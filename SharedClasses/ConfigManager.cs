@@ -115,6 +115,8 @@ namespace vMenuShared
             vmenu_kvs_sync_local,
             vmenu_mysql_connection_string_var,
             vmenu_server_store,
+
+            vmenu_debug_permissions,
         }
 
         /// <summary>

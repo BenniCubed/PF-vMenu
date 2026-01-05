@@ -4,6 +4,8 @@ using System.Linq;
 
 using CitizenFX.Core;
 
+using static vMenuShared.ConfigManager;
+
 using static CitizenFX.Core.Native.API;
 
 namespace vMenuShared
@@ -12,6 +14,10 @@ namespace vMenuShared
     {
         public enum Permission
         {
+            // Permission debugging
+            AceDebugPermissionsIsAdmin,
+            AceDebugPermissionsIsModerator,
+
             // Global
             #region global
             Everything,
@@ -533,6 +539,19 @@ namespace vMenuShared
                 return;
             }
 
+            if (GetSettingsBool(Setting.vmenu_debug_permissions))
+            {
+                var identifiers = player.Identifiers;
+                var isAdmin = IsAllowed(Permission.AceDebugPermissionsIsAdmin, player);
+                var isMod = IsAllowed(Permission.AceDebugPermissionsIsModerator, player);
+                Debug.WriteLine(
+                    $"Sending permissions to {player.Name} with IDs " +
+                    $"fivem:{identifiers["fivem"] ?? "NULL"}, " +
+                    $"license:{identifiers["license"] ?? "NULL"}, " +
+                    $"and roles " +
+                    $"admin={isAdmin}, moderator={isMod}");
+            }
+
             var perms = new Dictionary<Permission, bool>();
 
             // If enabled in the permissions.cfg (disabled by default) then this will give me (only me) the option to trigger some debug commands and
@@ -601,6 +620,23 @@ namespace vMenuShared
             if (GetResourceMetadata(GetCurrentResourceName(), "client_debug_mode", 0) == "true")
             {
                 Debug.WriteLine("[vMenu] [Permissions] " + Newtonsoft.Json.JsonConvert.SerializeObject(Permissions, Newtonsoft.Json.Formatting.None));
+            }
+
+            ArePermissionsSetup = true;
+
+            if (GetSettingsBool(Setting.vmenu_debug_permissions))
+            {
+                var roles = new List<string> { };
+                if (IsAllowed(Permission.AceDebugPermissionsIsAdmin))
+                {
+                    roles.Add("admin");
+                }
+                if (IsAllowed(Permission.AceDebugPermissionsIsModerator))
+                {
+                    roles.Add("moderator");
+                }
+
+                Debug.WriteLine("[INFO] Your roles: {" + string.Join(",", roles) + "}");
             }
         }
 #endif

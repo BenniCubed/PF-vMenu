@@ -670,7 +670,6 @@ namespace vMenuClient
         {
             vMenuShared.PermissionsManager.SetPermissions(permissionsList);
 
-            ArePermissionsSetup = true;
             while (!ConfigOptionsSetupComplete)
             {
                 await Delay(100);
