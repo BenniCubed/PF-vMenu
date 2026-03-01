@@ -64,7 +64,7 @@ namespace vMenuClient
         /// Setup the required tick functions
         /// </summary>
         [EventHandler("vMenu:SetupTickFunctions")]
-        public void SetupTickFunctions()
+        public async void SetupTickFunctions()
         {
             // Always needed
             Tick += AnimationsAndInteractions;
@@ -73,6 +73,12 @@ namespace vMenuClient
             Tick += MiscSettings;
             Tick += GeneralTasks;
             Tick += GcTick;
+
+            if (MainMenu.VehicleThumbnailDrawer != null)
+            {
+                await MainMenu.VehicleThumbnailDrawer.Setup();
+                Tick += MainMenu.VehicleThumbnailDrawer.Draw;
+            }
 
             if (GetSettingsBool(Setting.keep_player_head_props))
             {
@@ -905,11 +911,11 @@ namespace vMenuClient
                                 SetDriftTyresEnabled(veh.Handle, true);
                             }
                             else
-                            if ((Game.IsControlJustReleased(0, Control.Sprint) && Game.CurrentInputMode == InputMode.MouseAndKeyboard) ||
-                                (Game.IsControlJustReleased(0, Control.Jump) && Game.CurrentInputMode == InputMode.GamePad))
-                            {
-                                SetDriftTyresEnabled(veh.Handle, false);
-                            }
+                                if ((Game.IsControlJustReleased(0, Control.Sprint) && Game.CurrentInputMode == InputMode.MouseAndKeyboard) ||
+                                    (Game.IsControlJustReleased(0, Control.Jump) && Game.CurrentInputMode == InputMode.GamePad))
+                                {
+                                    SetDriftTyresEnabled(veh.Handle, false);
+                                }
                         }
                     }
                 }

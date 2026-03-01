@@ -45,6 +45,7 @@ namespace vMenuShared
 
             // Vehicle spawner related settings
             vmenu_only_custom_classes,
+            vmenu_show_vehicle_thumbnails,
             vmenu_vehicle_spawn_delay,
 
             // Kick & ban settings

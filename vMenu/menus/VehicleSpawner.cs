@@ -99,11 +99,11 @@ namespace vMenuClient.menus
                 Label = $"~c~({vi.Shortname})~s~",
                 ItemData = vi
             }.ToWrapped();
-        btn.Selected += async (_s, _args) => await SpawnVehicle(
-            vi.Shortname,
-            SpawnInVehicle,
-            ReplaceVehicle, destructible: SpawnDestructible,
-            upgraded: SpawnUpgraded);
+            btn.Selected += async (_s, _args) => await SpawnVehicle(
+                vi.Shortname,
+                SpawnInVehicle,
+                ReplaceVehicle, destructible: SpawnDestructible,
+                upgraded: SpawnUpgraded);
 
             return btn;
         }
@@ -269,6 +269,7 @@ namespace vMenuClient.menus
                     {
                         vehiclesMenu.Menu.RefreshIndex();
                         vehiclesMenu.ResetIncrement();
+                        MainMenu.VehicleThumbnailDrawer?.HideThumbnail();
                     }
                 },
                 true));
@@ -295,15 +296,37 @@ namespace vMenuClient.menus
                 vehiclesMenu.Closed += (_s, _args) => vehiclesMenu.ResetIncrement();
             }
 
-            foreach(var vehicle in vehicles)
+            foreach (var vehicle in vehicles)
             {
                 var btn = CreateSpawnVehicleButton(vehicle);
                 vehiclesMenu.AddItem(btn);
             }
 
+            var changeThumbnail = (MenuItem item) =>
+            {
+                if (item == null)
+                    return;
+
+                var vi = item.ItemData as VehicleData.VehicleModelInfo;
+                if (vi != null)
+                {
+                    MainMenu.VehicleThumbnailDrawer?.SetThumbnail(vi.Shortname);
+                }
+                else
+                {
+                    MainMenu.VehicleThumbnailDrawer?.HideThumbnail();
+                }
+            };
+
+            vehiclesMenu.IndexChanged += (_, args) =>
+            {
+                changeThumbnail(args.ItemNew.MenuItem);
+            };
+
             vehiclesMenu.Opened += (s, args) =>
             {
                 SetIndexPastFilters(vehiclesMenu, filterItems);
+                changeThumbnail(vehiclesMenu.Menu.GetCurrentMenuItem());
             };
 
             vehiclesMenu.Closed += (_s, _args) =>
@@ -316,6 +339,7 @@ namespace vMenuClient.menus
                 searchingByName = false;
             };
 
+            MainMenu.VehicleThumbnailDrawer?.AddMenu(vehiclesMenu.Menu);
             return vehiclesMenu;
         }
 

@@ -33,7 +33,8 @@ files {
     'config/locations/*.json',
     'main.html',
     'menu-header-background.png',
-    'plates/*.png'
+    'plates/*.png',
+    'vehiclethumbnail.html',
 }
 client_script { 'plugin-config.lua', 'plugins/***/*.lua', 'plugins/*.lua' }
 

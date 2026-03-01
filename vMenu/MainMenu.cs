@@ -24,6 +24,8 @@ namespace vMenuClient
 {
     public class MainMenu : BaseScript
     {
+        public const string RUNTIME_TXD = "vmenu_textures";
+
         #region Variables
 
         public static bool PermissionsSetupComplete => ArePermissionsSetup;
@@ -102,15 +104,12 @@ namespace vMenuClient
         private static readonly LanguageManager Lm = new LanguageManager();
         #endregion
 
-        private void SetDefaultMenuAppearance()
+        private void SetDefaultMenuAppearance(long runtimeTxdHandle)
         {
-            const string texture_dict = "vmenu_textures";
             const string texture_name = "menu_header_background";
+            CreateRuntimeTextureFromImage(runtimeTxdHandle, texture_name, "menu-header-background.png");
 
-            var txd = CreateRuntimeTxd(texture_dict);
-            CreateRuntimeTextureFromImage(txd, texture_name, "menu-header-background.png");
-
-            MenuController._texture_dict = texture_dict;
+            MenuController._texture_dict = RUNTIME_TXD;
             MenuController._header_texture = texture_name;
 
             var subtitleColor = GetSettingsString(Setting.vmenu_menu_subtitle_color);
@@ -120,6 +119,8 @@ namespace vMenuClient
             }
             MenuController._menu_subtitle_color = $"~{subtitleColor}~";
         }
+
+        public static VehicleThumbnailDrawer VehicleThumbnailDrawer { get; private set; }
 
         /// <summary>
         /// Constructor.
@@ -131,7 +132,14 @@ namespace vMenuClient
             // Get the languages.
             LanguageManager.Languages = GetLanguages();
 
-            SetDefaultMenuAppearance();
+            var runtimeTxdHandle = CreateRuntimeTxd(RUNTIME_TXD);
+
+            SetDefaultMenuAppearance(runtimeTxdHandle);
+            if (GetSettingsBool(Setting.vmenu_show_vehicle_thumbnails))
+            {
+                var vehicleThumbnailTextureManager = new VehicleThumbnailTextureManager(runtimeTxdHandle, RUNTIME_TXD);
+                VehicleThumbnailDrawer = new VehicleThumbnailDrawer(vehicleThumbnailTextureManager);
+            }
 
             #region cleanup unused kvps
             var tmp_kvp_handle = StartFindKvp("");
@@ -747,7 +755,7 @@ namespace vMenuClient
             MenuController.AddMenu(Menu.Menu);
             MenuController.MainMenu = Menu.Menu;
 
-            MenuController.MainMenu.HeaderTexture = new KeyValuePair<string, string>("vmenu_textures", "menu_header_background");
+            MenuController.MainMenu.HeaderTexture = new KeyValuePair<string, string>(RUNTIME_TXD, "menu_header_background");
 
             // Waiting 2 seconds maybe avoids car names not being query-able using GetLabelText(), etc. right away
             await Delay(2000);

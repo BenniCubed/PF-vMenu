@@ -137,7 +137,7 @@ namespace vMenuClient.menus
             }
 
             var renameVehicle = new MenuItem("Rename Vehicle", "Rename this saved vehicle.").ToWrapped();
-            renameVehicle.Selected += async (s_ , _args) =>
+            renameVehicle.Selected += async (s_, _args) =>
             {
                 var newName = await GetUserInput("Enter a new name for this vehicle", 30);
                 if (string.IsNullOrEmpty(newName))
@@ -468,7 +468,7 @@ namespace vMenuClient.menus
             }
             menuData.VehicleButtons.Clear();
 
-            foreach(var vehicle in vehicles)
+            foreach (var vehicle in vehicles)
             {
                 var btn = available
                     ? CreateAvailableVehicleButton(vehicle.Item1, vehicle.Item2)

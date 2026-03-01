@@ -1,0 +1,82 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <style>
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      box-sizing: border-box;
+      padding: calc(2px * (1080/440));
+      background: rgba(0, 0, 0, 250);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  </style>
+</head>
+
+<body>
+  <img id="img">
+  <script>
+    const vehicleThumbnailsResource = "vehiclethumbnails";
+    const hideThumbnailDelay = 50;
+
+    const body = document.body;
+    const img = document.getElementById("img");
+
+    let req = 0;
+    let loaded = false;
+    let hideTimer = null;
+
+    window.addEventListener("message", e => {
+      const vehicle = e.data?.vehicle;
+      if (!vehicle) return;
+
+      const id = ++req;
+      const url = `https://cfx-nui-${vehicleThumbnailsResource}/images/${vehicle}.jpg`;
+      const loader = new Image();
+
+      // Hide the previous thumbnail, but only after some delay to prevent the thumbnail image flashing between visible
+      // and invisible when scrolling through the images quickly and loading the next thumbnail takes some time.
+      // We only start a new hide timer when there currently is an image loaded as to not restart the timer each time we
+      // move to a new vehicle.
+      if (loaded) {
+        loaded = false;
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(() => {
+          if (!loaded) {
+            body.style.background = "rgba(0,0,0,0)";
+            img.style.display = "none";
+            img.removeAttribute("src");
+          }
+        }, hideThumbnailDelay); // 50 ms
+      }
+
+      loader.onload = (ev) => {
+        if (id !== req) return; // Ignore previous, outdated request events
+        loaded = true;
+        clearTimeout(hideTimer);
+        body.style.background = "rgba(0,0,0,250)";
+        img.src = url;
+        img.style.display = "block";
+      };
+
+      loader.src = url;
+    });
+  </script>
+</body>
+
+</html>
