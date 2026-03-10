@@ -28,10 +28,10 @@ namespace vMenuClient
             menus.Add(menu);
         }
 
-        public void SetThumbnail(string vehicle)
+        public void SetThumbnail(string vehicle, bool immediately)
         {
             enabled = true;
-            manager.ChangeThumbnail(vehicle);
+            manager.ChangeThumbnail(vehicle, immediately);
         }
 
         public void HideThumbnail()
@@ -133,12 +133,12 @@ namespace vMenuClient
             setup = true;
         }
 
-        public void ChangeThumbnail(string vehicle)
+        public void ChangeThumbnail(string vehicle, bool immediately)
         {
             if (!setup)
                 throw new InvalidOperationException("VehicleThumbnailTextureManager not setup");
 
-            SendDuiMessage(duiObj, JsonConvert.SerializeObject(new { vehicle }));
+            SendDuiMessage(duiObj, JsonConvert.SerializeObject(new { vehicle, immediately }));
         }
     }
 }

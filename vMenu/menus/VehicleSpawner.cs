@@ -302,7 +302,7 @@ namespace vMenuClient.menus
                 vehiclesMenu.AddItem(btn);
             }
 
-            var changeThumbnail = (MenuItem item) =>
+            var changeThumbnail = (MenuItem item, bool immediately) =>
             {
                 if (item == null)
                     return;
@@ -310,7 +310,7 @@ namespace vMenuClient.menus
                 var vi = item.ItemData as VehicleData.VehicleModelInfo;
                 if (vi != null)
                 {
-                    MainMenu.VehicleThumbnailDrawer?.SetThumbnail(vi.Shortname);
+                    MainMenu.VehicleThumbnailDrawer?.SetThumbnail(vi.Shortname, immediately);
                 }
                 else
                 {
@@ -320,13 +320,13 @@ namespace vMenuClient.menus
 
             vehiclesMenu.IndexChanged += (_, args) =>
             {
-                changeThumbnail(args.ItemNew.MenuItem);
+                changeThumbnail(args.ItemNew.MenuItem, false);
             };
 
             vehiclesMenu.Opened += (s, args) =>
             {
                 SetIndexPastFilters(vehiclesMenu, filterItems);
-                changeThumbnail(vehiclesMenu.Menu.GetCurrentMenuItem());
+                changeThumbnail(vehiclesMenu.Menu.GetCurrentMenuItem(), true);
             };
 
             vehiclesMenu.Closed += (_s, _args) =>
