@@ -7,6 +7,7 @@ using CitizenFX.Core;
 
 using Newtonsoft.Json;
 
+using vMenuClient.data;
 using vMenuClient.menus;
 
 using static CitizenFX.Core.Native.API;
@@ -25,7 +26,7 @@ namespace vMenuClient
         {
             // Add event handlers.
             EventHandlers.Add("vMenu:SetAddons", new Action(SetAddons));
-            EventHandlers.Add("vMenu:SetExtras", new Action(SetExtras));
+            EventHandlers.Add("vMenu:SetExtras", new Action<string>(SetExtras));
             EventHandlers.Add("vMenu:SetPermissions", new Action<string>(MainMenu.SetPermissions));
             EventHandlers.Add("vMenu:GoToPlayer", new Action<string>(SummonPlayer));
             EventHandlers.Add("vMenu:KillMe", new Action<string>(KillMe));
@@ -188,7 +189,7 @@ namespace vMenuClient
         /// <summary>
         /// Sets the extras labels from the extras.json file.
         /// </summary>
-        private void SetExtras()
+        private void SetVehicleExtras()
         {
             // reset addons
             VehicleCustomization.VehicleExtras = new Dictionary<uint, Dictionary<int, string>>();
@@ -225,6 +226,14 @@ namespace vMenuClient
             {
                 Debug.WriteLine($"\n\n^1[vMenu] [ERROR] ^7Your extras.json file contains a problem! Error details: {ex.Message}\n\n");
             }
+        }
+
+        private void SetExtras(string json)
+        {
+            SetVehicleExtras();
+
+            var extras = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+            VehicleData.InitVehicleInfo(JsonConvert.DeserializeObject<VehicleData.VehicleInfoJson>(extras["vehicleInfo"]));
 
             MainMenu.ConfigOptionsSetupComplete = true;
         }

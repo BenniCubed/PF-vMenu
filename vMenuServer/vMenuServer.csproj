@@ -85,6 +85,12 @@
     <None Update="*.lua">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="hooks/*.lua">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="internal/*.lua">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="plugins/*.lua">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

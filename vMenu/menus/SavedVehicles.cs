@@ -288,7 +288,7 @@ namespace vMenuClient.menus
 
             {
                 var manufacturers = VehicleData.AllowedVehicles
-                    .Select(veh => VehicleData.AllVehicles[veh].Manufacturer)
+                    .Select(veh => veh.Manufacturer)
                     .Distinct()
                     .OrderBy(s => s, Comparer<string>.Create(VehicleData.CompareManufacturers))
                     .Select(s => s == "NULL" ? "~italic~Unknown~italic~" : s);
@@ -329,7 +329,9 @@ namespace vMenuClient.menus
 
             bool customClassesOnly = GetSettingsBool(Setting.vmenu_only_custom_classes);
 
-            var customClasses = VehicleData.CustomVehiclesClasses.Select(c => c.Name).ToList();
+            var customClasses = VehicleData.CustomVehicleClasses
+                .Select(c => c.Name)
+                .ToList();
             if (customClasses.Count > 0)
             {
                 var customClassesOptions = Enumerable.Concat(["~italic~All~italic~"], customClasses).ToList();
@@ -365,10 +367,10 @@ namespace vMenuClient.menus
                 filterItems.CustomClass = customClassesFilter;
             }
 
-            if (customClasses.Count == 0 || !GetSettingsBool(Setting.vmenu_only_custom_classes))
+            if (customClasses.Count == 0 || !customClassesOnly)
             {
                 var defaultClasses = VehicleData.AllowedVehicles
-                    .Select(veh => VehicleData.AllVehicles[veh].Class)
+                    .Select(veh => veh.Class)
                     .OrderBy(c => c, Comparer<int>.Create(VehicleData.CompareClasses))
                     .Distinct()
                     .Select(c => VehicleData.ClassIdToName[c]);
@@ -383,11 +385,11 @@ namespace vMenuClient.menus
                 {
                     if (args.ListIndexNew == 0)
                     {
-                        filter.DefaultClass = null;
+                        filter.RockstarClass = null;
                     }
                     else
                     {
-                        filter.DefaultClass = defaultClassesOptions[args.ListIndexNew];
+                        filter.RockstarClass = defaultClassesOptions[args.ListIndexNew];
                     }
 
                     FilterAvailableSavedVehiclesMenu();
@@ -396,7 +398,7 @@ namespace vMenuClient.menus
                 defaultClassesFilter.ListSelected += (_s, _args) =>
                 {
                     defaultClassesFilter.AsListItem().ListIndex = 0;
-                    filter.DefaultClass = null;
+                    filter.RockstarClass = null;
 
                     FilterAvailableSavedVehiclesMenu();
                     vehiclesMenu.Menu.RefreshIndex(2 + (customClasses.Count > 0 ? 1 : 0));

@@ -58,6 +58,53 @@ namespace vMenuServer
         }
     }
 
+    public class RequestManager : BaseScript
+    {
+        private static RequestManager instance;
+
+        private readonly Dictionary<ulong, string> responses = new Dictionary<ulong, string>();
+
+        private ulong nextId = 0;
+
+        [EventHandler("vMenu:RequestManager:Response")]
+        private void HandleResponse(ulong id, string responseJson)
+        {
+            responses[id] = responseJson;
+        }
+
+        public RequestManager()
+        {
+            if (instance != null)
+                throw new InvalidOperationException("RequestManager may only be instantiated once.");
+
+            instance = this;
+        }
+
+        private async Task<string> SendImpl(string eventName, string argsJson)
+        {
+            var thisId = nextId++;
+            TriggerEvent($"vMenu:{eventName}", thisId, argsJson);
+
+            do
+            {
+                await Delay(1);
+            } while (!responses.ContainsKey(thisId));
+
+            var response = responses[thisId];
+            responses.Remove(thisId);
+
+            return response;
+        }
+
+        public static Task<string> Send(string eventName, string argsJson = null)
+        {
+            if (instance == null)
+                throw new InvalidOperationException("RequestManager must be instantiated.");
+
+            return instance.SendImpl(eventName, argsJson);
+        }
+    }
+
     public class MainServer : BaseScript
     {
         #region vars
@@ -161,6 +208,8 @@ namespace vMenuServer
                     }
                     else
                     {
+                        Hooks.VehicleInfo.FetchResult = RequestManager.Send(Hooks.VehicleInfo.FETCH_EVENT_NAME);
+
                         // Add event handlers.
                         EventHandlers.Add("vMenu:GetPlayerIdentifiers", new Action<Player, object>(([FromSource] Player player, object callback) =>
                         {
@@ -380,6 +429,20 @@ namespace vMenuServer
             else
             {
                 Debug.WriteLine($"vMenu is currently running version: {Version}. Try ^5vmenuserver help^7 for info.");
+            }
+        }
+        #endregion
+
+        #region Hooks
+        public static class Hooks
+        {
+            private const string HOOKS_PREFIX = "Hooks:";
+
+            public static class VehicleInfo
+            {
+                public const string FETCH_EVENT_NAME = HOOKS_PREFIX + "VehicleInfo:fetch";
+
+                public static Task<string> FetchResult { get; set; }
             }
         }
         #endregion

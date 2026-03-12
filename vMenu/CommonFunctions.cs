@@ -2097,34 +2097,9 @@ namespace vMenuClient
         /// <returns></returns>
         public static Dictionary<string, VehicleInfo> GetSavedVehicles()
         {
-            // Create a list to store all saved vehicle names in.
-            var savedVehicleNames = KeyValueStore.GetAllWithPrefix("veh_").Keys.ToList();
-
-            // Create a Dictionary to store all vehicle information in.
-            //var vehiclesList = new Dictionary<string, Dictionary<string, string>>();
-            var vehiclesList = new Dictionary<string, VehicleInfo>();
-            // Loop through all save names (keys) from the list above, convert the string into a dictionary
-            // and add it to the dictionary above, with the vehicle save name as the key.
-            foreach (var saveName in savedVehicleNames)
-            {
-                string jsonData = LoadResourceFile(GetCurrentResourceName(), "config/addons.json") ?? "{}";
-                var addons = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(jsonData);
-                var vehicleblacklist = new List<string>();
-                foreach (string addon in addons["vehicleblacklist"])
-                {
-                    uint veh = (uint)GetHashKey(addon);
-                    vehicleblacklist.Add(veh.ToString());
-                }
-                if (!vehicleblacklist.Any(x => x == StorageManager.GetSavedVehicleInfo(saveName).model.ToString() && !IsAllowed(Permission.VOVehiclesBlacklist)))
-                {
-
-                    vehiclesList.Add(saveName, StorageManager.GetSavedVehicleInfo(saveName));
-
-                }
-            }
-            // Return the vehicle dictionary containing all vehicle save names (keys) linked to the correct vehicle
-            // including all vehicle mods/customization parts.
-            return vehiclesList;
+            return KeyValueStore.GetAllWithPrefix("veh_")
+                .Keys
+                .ToDictionary(name => name, StorageManager.GetSavedVehicleInfo);
         }
         #endregion
 

@@ -83,9 +83,6 @@ namespace vMenuClient.menus
         public bool ReplaceVehicle { get; private set; } = UserDefaults.VehicleSpawnerReplacePrevious;
         public bool SpawnDestructible { get; private set; } = UserDefaults.VehicleSpawnerSpawnDestructible;
 
-        private List<VehicleData.VehicleModelInfo> allowedVehiclesList;
-
-
         private WMenuItem CreateSpawnVehicleButton(VehicleData.VehicleModelInfo vi)
         {
             var textColor = !vi.HasProperName ? "~y~" : vi.IsAddon ? "~q~" : "";
@@ -141,7 +138,7 @@ namespace vMenuClient.menus
 
             {
                 var manufacturers = VehicleData.DisplayVehicles
-                    .Select(veh => VehicleData.AllVehicles[veh].Manufacturer)
+                    .Select(veh => veh.Manufacturer)
                     .Distinct()
                     .OrderBy(s => s, Comparer<string>.Create(VehicleData.CompareManufacturers))
                     .Select(s => s == "NULL" ? "~italic~Unknown~italic~" : s);
@@ -180,7 +177,9 @@ namespace vMenuClient.menus
 
             bool customClassesOnly = GetSettingsBool(Setting.vmenu_only_custom_classes);
 
-            var customClasses = VehicleData.CustomVehiclesClasses.Select(c => c.Name).ToList();
+            var customClasses = VehicleData.CustomVehicleClasses
+                .Select(c => c.Name)
+                .ToList();
             if (customClasses.Count > 0)
             {
                 var customClassesOptions = Enumerable.Concat(["~italic~All~italic~"], customClasses).ToList();
@@ -214,43 +213,43 @@ namespace vMenuClient.menus
                 vehiclesMenu.AddItem(customClassesFilter);
             }
 
-            if (customClasses.Count == 0 || !GetSettingsBool(Setting.vmenu_only_custom_classes))
+            if (customClasses.Count == 0 || !customClassesOnly)
             {
                 var defaultClasses = VehicleData.DisplayVehicles
-                    .Select(veh => VehicleData.AllVehicles[veh].Class)
+                    .Select(veh => veh.Class)
                     .OrderBy(c => c, Comparer<int>.Create(VehicleData.CompareClasses))
                     .Distinct()
                     .Select(c => VehicleData.ClassIdToName[c]);
 
-                var defaultClassesOptions = Enumerable.Concat(["~italic~All~italic~"], defaultClasses).ToList();
-                var defaultClassesFilter = new MenuListItem(
-                    $"~b~Filter By {(customClasses.Count == 0 ? "" : "Default ")}Class~s~",
-                    defaultClassesOptions,
+                var rockstarClassesOptions = Enumerable.Concat(["~italic~All~italic~"], defaultClasses).ToList();
+                var rockstarClassesFilter = new MenuListItem(
+                    $"~b~Filter By {(customClasses.Count == 0 ? "" : "Rockstar ")}Class~s~",
+                    rockstarClassesOptions,
                     0,
-                    "Filter vehicles by default class. Click to reset the filter.").ToWrapped();
-                defaultClassesFilter.ListChanged += (_s, args) =>
+                    "Filter vehicles by Rockstar class. Click to reset the filter.").ToWrapped();
+                rockstarClassesFilter.ListChanged += (_s, args) =>
                 {
                     if (args.ListIndexNew == 0)
                     {
-                        filter.DefaultClass = null;
+                        filter.RockstarClass = null;
                     }
                     else
                     {
-                        filter.DefaultClass = defaultClassesOptions[args.ListIndexNew];
+                        filter.RockstarClass = rockstarClassesOptions[args.ListIndexNew];
                     }
                     FilterAllVehiclesMenu();
                     vehiclesMenu.Menu.RefreshIndex(2 + (customClasses.Count > 0 ? 1 : 0));
                 };
-                defaultClassesFilter.ListSelected += (_s, _args) =>
+                rockstarClassesFilter.ListSelected += (_s, _args) =>
                 {
-                    defaultClassesFilter.AsListItem().ListIndex = 0;
-                    filter.DefaultClass = null;
+                    rockstarClassesFilter.AsListItem().ListIndex = 0;
+                    filter.RockstarClass = null;
                     FilterAllVehiclesMenu();
                     vehiclesMenu.Menu.RefreshIndex(2 + (customClasses.Count > 0 ? 1 : 0));
                 };
 
-                filterItems.DefaultClass = defaultClassesFilter;
-                vehiclesMenu.AddItem(defaultClassesFilter);
+                filterItems.DefaultClass = rockstarClassesFilter;
+                vehiclesMenu.AddItem(rockstarClassesFilter);
             }
 
             vehiclesMenu.AddItem(WMenuItem.CreateSeparatorItem("Vehicles"));
@@ -275,14 +274,9 @@ namespace vMenuClient.menus
                 true));
         }
 
-        private WMenu CreateVehiclesMenu(string subtitle, List<VehicleData.VehicleModelInfo> vehicles, bool addFilters = false, bool showDisabled = false)
+        private WMenu CreateVehiclesMenu(string subtitle, List<VehicleData.VehicleModelInfo> vehicles, bool addFilters = false)
         {
             var vehiclesMenu = new WMenu(MenuTitle, subtitle);
-
-            if (!showDisabled)
-            {
-                vehicles = vehicles.Where(vi => VehicleData.DisplayVehicles.Contains(vi.Shortname)).ToList();
-            }
 
             if (addFilters)
             {
@@ -345,10 +339,24 @@ namespace vMenuClient.menus
 
         private Random random = new Random();
 
-        private List<string> randomVehiclesList;
+        private List<string> randomLandVehiclesList;
+        private List<string> randomWaterVehiclesList;
         public async Task SpawnRandomVehicle()
         {
-            if (randomVehiclesList.Count == 0)
+            List<string> randomVehiclesList;
+
+            var playerId = PlayerPedId();
+
+            if (IsPedSwimming(playerId) || IsPedSwimmingUnderWater(playerId))
+            {
+                randomVehiclesList = randomWaterVehiclesList;
+            }
+            else
+            {
+                randomVehiclesList = randomLandVehiclesList;
+            }
+
+            if (randomVehiclesList == null || randomVehiclesList.Count == 0)
             {
                 Notify.Error("You are not able to spawn any random vehicles, sorry");
                 return;
@@ -382,14 +390,19 @@ namespace vMenuClient.menus
 
         private void CreateMenu()
         {
-            allowedVehiclesList = VehicleData.AllVehicles.Values
-                        .Where(vi => vi.IsAllowed)
-                        .OrderBy(vi => vi.Name, Comparer<string>.Create(VehicleData.CompareVehicleNames))
-                        .ToList();
+            var allowedVehiclesList = VehicleData.AllVehicles.Values
+                .Where(vi => vi.IsAllowed)
+                .OrderBy(vi => vi.Name, Comparer<string>.Create(VehicleData.CompareVehicleNames))
+                .ToList();
 
-            randomVehiclesList = VehicleData.DisplayVehicles.Where(veh =>
+            var allowedDisplayVehiclesList = allowedVehiclesList.Where(vi => vi.DisplayVehicle).ToList();
+
+            var possibleRandomVehicles = VehicleData.DisplayVehicles.Where(veh => !veh.IsBlacklisted);
+
+            randomLandVehiclesList = possibleRandomVehicles
+                .Where(veh =>
                 {
-                    var hash = (uint)GetHashKey(veh);
+                    var hash = veh.Hash;
                     return
                         IsThisModelABicycle(hash) ||
                         IsThisModelABike(hash) ||
@@ -397,20 +410,28 @@ namespace vMenuClient.menus
                         IsThisModelAnAmphibiousCar(hash) ||
                         IsThisModelAnAmphibiousQuadbike((int)hash) ||
                         IsThisModelAQuadbike(hash);
-                }).ToList();
-
-            randomSportyVehiclesList = randomVehiclesList.Where(veh =>
-            {
-                var vi = VehicleData.AllVehicles[veh];
-
-                if (VehicleData.CustomVehicleClassesDict.TryGetValue("Sporty", out var _))
+                })
+                .Select(veh => veh.Shortname)
+                .ToList();
+            randomWaterVehiclesList = possibleRandomVehicles
+                .Where(veh =>
                 {
-                    return vi.CustomVehicleClasses.Contains("Sporty");
-                }
+                    var hash = veh.Hash;
+                    return
+                        IsThisModelABoat(hash) ||
+                        IsThisModelAJetski(hash) ||
+                        IsThisModelASubmersible(hash) ||
+                        IsThisModelAnAmphibiousCar(hash) ||
+                        IsThisModelAnAmphibiousQuadbike((int)hash) ||
+                        IsThisModelAnEmergencyBoat(hash);
+                })
+                .Select(veh => veh.Shortname)
+                .ToList();
 
-                // 5-7 = Sports Classics, Sports, Super
-                return vi.Class >= 5 && vi.Class <= 7 && !vi.CustomVehicleClasses.Contains("Meme");
-            }).ToList();
+            randomSportyVehiclesList = VehicleData.DisplayVehicles
+                .Where(veh => veh.IsSporty)
+                .Select(veh => veh.Shortname)
+                .ToList();
 
             // Create the menu.
             menu = new WMenu(MenuTitle, "Spawn Vehicles");
@@ -452,12 +473,10 @@ namespace vMenuClient.menus
                 menu.AddItem(searchByName);
             }
 
-
             {
-                AllVehiclesMenu = CreateVehiclesMenu("Vehicles List", allowedVehiclesList, addFilters: true);
+                AllVehiclesMenu = CreateVehiclesMenu("Vehicles List", allowedDisplayVehiclesList, addFilters: true);
                 menu.AddSubmenu(AllVehiclesMenu, "A list of all vehicles that you can also filter.");
             }
-
 
             {
                 var spawnRandom = new MenuItem("Spawn Random Vehicle", "Spawn a random land-based vehicle.").ToWrapped();
@@ -466,13 +485,13 @@ namespace vMenuClient.menus
                 menu.AddItem(spawnRandom);
             }
 
+            if (randomSportyVehiclesList.Count > 0)
             {
                 var spawnRandomSporty = new MenuItem("Spawn Random Sporty Vehicle", "Spawn a random, but sporty land-based vehicle.").ToWrapped();
                 spawnRandomSporty.Selected += async (_s, _args) => await SpawnRandomSportyVehicle();
 
                 menu.AddItem(spawnRandomSporty);
             }
-
 
             {
                 var spawnOptionsMenu = new Menu(MenuTitle, "Spawn Options");
@@ -525,16 +544,16 @@ namespace vMenuClient.menus
             if (VehicleData.VehicleDisablelist.Count > 0 && IsAllowed(Permission.VODisableFromDefaultList))
             {
                 var allowedDisabledVehicles = allowedVehiclesList
-                    .Where(vi => VehicleData.VehicleDisablelist.Contains(vi.Shortname))
+                    .Where(vi => vi.IsHidden)
                     .ToList();
 
                 if (allowedDisabledVehicles.Count > 0)
                 {
-                    var disabledVehiclesMenu = CreateVehiclesMenu("Hidden Vehicles", allowedDisabledVehicles, addFilters: false, showDisabled: true);
+                    var disabledVehiclesMenu = CreateVehiclesMenu("Hidden Vehicles", allowedDisabledVehicles, addFilters: false);
 
                     WMenuItem button = new MenuItem(
                         "~y~Hidden Vehicles~s~",
-                        "Vehicles in ~b~addons.json > disablefromdefaultlist~s~. ~y~These vehicles will not show in other vehicle lists and can only be spawned by players with the ~o~VODisableFromDefaultList~y~ permission.~s~")
+                        "~y~These vehicles will not show in other vehicle lists and can only be spawned by players with the ~o~VODisableFromDefaultList~y~ permission.~s~")
                         .ToWrapped();
                     menu.BindSubmenu(disabledVehiclesMenu, button);
 
@@ -550,11 +569,11 @@ namespace vMenuClient.menus
 
                 if (allowedBlacklistedVehicles.Count > 0)
                 {
-                    var disabledVehiclesMenu = CreateVehiclesMenu("Blacklisted Vehicles", allowedBlacklistedVehicles, addFilters: false, showDisabled: false);
+                    var disabledVehiclesMenu = CreateVehiclesMenu("Blacklisted Vehicles", allowedBlacklistedVehicles, addFilters: false);
 
                     WMenuItem button = new MenuItem(
                         "~y~Blacklisted Vehicles~s~",
-                        "Vehicles in ~b~addons.json > vehicleblacklist~s~. ~y~These vehicles ~italic~will~italic~ show in other vehicle lists, but can only be spawned by players with the ~o~VOVehiclesBlacklist~y~ permission.~s~")
+                        "~y~These vehicles ~italic~will~italic~ show in other vehicle lists, but can only be spawned by players with the ~o~VOVehiclesBlacklist~y~ permission.~s~")
                         .ToWrapped();
                     menu.BindSubmenu(disabledVehiclesMenu, button);
 

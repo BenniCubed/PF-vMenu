@@ -351,91 +351,87 @@ namespace vMenuClient.data
 
         };
 
+        public class CustomVehicleClassJson
+        {
+            public string name = "";
+            public List<string> vehicles = new List<string>();
+        }
+        public class VehicleInfoJson
+        {
+            public List<string> addons = new List<string>();
+            public List<string> blacklisted = new List<string>();
+            public List<string> hidden = new List<string>();
+            public List<string> sporty = new List<string>();
+            public List<CustomVehicleClassJson> customClasses = new List<CustomVehicleClassJson>();
+        }
+
+        private static HashSet<string> GetVehicleInfoSet(string listName, List<string> vehicles)
+        {
+            HashSet<string> set = new HashSet<string>();
+
+            foreach (var vehicle in vehicles)
+            {
+                if (!IsModelInCdimage((uint)GetHashKey(vehicle)))
+                {
+                    Debug.WriteLine($"^3[vMenu] [WARNING]^7 Vehicle \"{vehicle}\" in vehicleInfo[{listName}] not available");
+                }
+                else
+                {
+                    set.Add(vehicle.ToLower());
+                }
+            }
+
+            return set;
+        }
+
+        public static void InitVehicleInfo(VehicleInfoJson info)
+        {
+            AddonVehicles = GetVehicleInfoSet("addons", info.addons);
+            VehicleBlacklist = GetVehicleInfoSet("blacklisted", info.blacklisted);
+            VehicleDisablelist = GetVehicleInfoSet("hidden", info.hidden);
+            SportyVehicles = GetVehicleInfoSet("sporty", info.sporty);
+
+            var customClasses = info.customClasses;
+            HashSet<string> seenClassNames = new HashSet<string>();
+            foreach (var customClass in customClasses)
+            {
+                var className = customClass.name;
+                if (seenClassNames.Contains(className))
+                {
+                    Debug.WriteLine($"[WARNING] Duplicate custom vehicle class \"{className}\" was not added.");
+                    continue;
+                }
+                seenClassNames.Add(className);
+
+                var classVehiclesSet = GetVehicleInfoSet("customClasses", customClass.vehicles);
+                if (classVehiclesSet.Count == 0)
+                    continue;
+
+                CustomVehicleClasses.Add(new CustomVehicleClass
+                {
+                    Name = className,
+                    Vehicles = classVehiclesSet
+                });
+            }
+        }
+
         public static Dictionary<int, string> ClassIdToName { get; } =
             Enumerable
                 .Range(0, 23)
                 .ToDictionary(c => c, c => GetLabelText($"VEH_CLASS_{c}"));
 
-
-        private static HashSet<string> addonVehicles = null;
-
-        private static HashSet<string> vehicleDisablelist = null;
-        private static HashSet<string> vehicleBlacklist = null;
-
-        private static void LoadAddonData()
+        public class CustomVehicleClass
         {
-            addonVehicles = new HashSet<string>();
-            vehicleDisablelist = new HashSet<string>();
-            vehicleBlacklist = new HashSet<string>();
-
-            void FillAddonSet(Dictionary<string, List<string>> addonData, string listName, HashSet<string> set)
-            {
-                List<string> list;
-                if (!addonData.TryGetValue(listName, out list))
-                    return;
-
-                foreach (var addon in list)
-                {
-                    if (!IsModelInCdimage((uint)GetHashKey(addon)))
-                    {
-                        Debug.WriteLine($"^3[vMenu] [WARNING]^7 Vehicle \"{addon}\" specified in \"addons.json > {listName}\" not available");
-                    }
-                    else
-                    {
-                        set.Add(addon.ToLower());
-                    }
-                }
-            }
-
-            string jsonData = LoadResourceFile(GetCurrentResourceName(), "config/addons.json") ?? "{}";
-            try
-            {
-                var addons = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(jsonData);
-
-                FillAddonSet(addons, "vehicles", addonVehicles);
-                FillAddonSet(addons, "disablefromdefaultlist", vehicleDisablelist);
-                FillAddonSet(addons, "vehicleblacklist", vehicleBlacklist);
-            }
-            catch
-            {
-                Debug.WriteLine($"^1[vMenu] [ERROR]^7 Could not parse \"addons.json\"");
-            }
+            public string Name { get; set; }
+            public HashSet<string> Vehicles { get; set; }
         }
 
-        public static HashSet<string> AddonVehicles
-        {
-            get
-            {
-                if (addonVehicles != null)
-                    return addonVehicles;
-
-                LoadAddonData();
-                return addonVehicles;
-            }
-        }
-
-        public static HashSet<string> VehicleBlacklist
-        {
-            get
-            {
-                if (vehicleBlacklist != null)
-                    return vehicleBlacklist;
-
-                LoadAddonData();
-                return vehicleBlacklist;
-            }
-        }
-        public static HashSet<string> VehicleDisablelist
-        {
-            get
-            {
-                if (vehicleDisablelist != null)
-                    return vehicleDisablelist;
-
-                LoadAddonData();
-                return vehicleDisablelist;
-            }
-        }
+        public static HashSet<string> AddonVehicles { get; private set; } = null;
+        public static HashSet<string> VehicleBlacklist { get; private set; } = null;
+        public static HashSet<string> VehicleDisablelist { get; private set; } = null;
+        public static HashSet<string> SportyVehicles { get; private set; } = null;
+        public static List<CustomVehicleClass> CustomVehicleClasses { get; private set; } =
+            new List<CustomVehicleClass>();
 
         private static List<bool> allowedClasses;
         public static List<bool> AllowedClasses
@@ -535,7 +531,7 @@ namespace vMenuClient.data
                 get => AddonVehicles.Contains(Shortname);
             }
 
-            private HashSet<string> customVehicleClasses;
+            private HashSet<string> customVehicleClasses = null;
             public HashSet<string> CustomVehicleClasses
             {
                 get
@@ -543,9 +539,9 @@ namespace vMenuClient.data
                     if (customVehicleClasses != null)
                         return customVehicleClasses;
 
-                    customVehicleClasses = new HashSet<string>(CustomVehiclesClasses
-                        .Where(c => c.Vehicles.Any(vi => vi.Shortname == Shortname))
-                        .Select(c => c.Name));
+                    customVehicleClasses = [..VehicleData.CustomVehicleClasses
+                        .Where(c => c.Vehicles.Contains(Shortname))
+                        .Select(c => c.Name)];
 
                     return customVehicleClasses;
                 }
@@ -554,12 +550,14 @@ namespace vMenuClient.data
             public bool IsAllowed =>
                 AllowedClasses[Class] &&
                 (!IsAddon || IsAllowed(Permission.VSAddon)) &&
-                (!VehicleBlacklist.Contains(Shortname) || IsAllowed(Permission.VOVehiclesBlacklist)) &&
-                (!VehicleDisablelist.Contains(Shortname) || IsAllowed(Permission.VODisableFromDefaultList));
+                (!IsBlacklisted || IsAllowed(Permission.VOVehiclesBlacklist)) &&
+                (!IsHidden || IsAllowed(Permission.VODisableFromDefaultList));
 
             public bool DisplayVehicle => IsAllowed && !IsHidden;
-            public bool IsHidden => vehicleDisablelist.Contains(Shortname);
-            public bool IsBlacklisted => vehicleBlacklist.Contains(Shortname);
+
+            public bool IsBlacklisted => VehicleBlacklist.Contains(Shortname);
+            public bool IsHidden => VehicleDisablelist.Contains(Shortname);
+            public bool IsSporty => SportyVehicles.Contains(Shortname);
         }
 
         private static Dictionary<string, VehicleModelInfo> allVehicles = null;
@@ -591,32 +589,30 @@ namespace vMenuClient.data
             }
         }
 
-        private static HashSet<string> allowedVehicles;
-        public static HashSet<string> AllowedVehicles
+        private static HashSet<VehicleModelInfo> allowedVehicles;
+        public static HashSet<VehicleModelInfo> AllowedVehicles
         {
             get
             {
                 if (allowedVehicles != null)
                     return allowedVehicles;
 
-                allowedVehicles = new HashSet<string>(AllVehicles.Values
-                    .Where(vi => vi.IsAllowed)
-                    .Select(v => v.Shortname));
+                allowedVehicles = [.. AllVehicles.Values.Where(vi => vi.IsAllowed)];
                 return allowedVehicles;
             }
         }
 
 
-        private static HashSet<string> displayVehicles;
+        private static HashSet<VehicleModelInfo> displayVehicles;
 
-        public static HashSet<string> DisplayVehicles
+        public static HashSet<VehicleModelInfo> DisplayVehicles
         {
             get
             {
                 if (displayVehicles != null)
                     return displayVehicles;
 
-                displayVehicles = new HashSet<string>(AllowedVehicles.Where(shortname => !VehicleDisablelist.Contains(shortname)));
+                displayVehicles = [.. AllowedVehicles.Where(vi => vi.DisplayVehicle)];
                 return displayVehicles;
             }
         }
@@ -749,13 +745,20 @@ namespace vMenuClient.data
             }
         }
 
+        private static Dictionary<int, int> compareVehicleClassDict =
+            new int[] { 0, 3, 4, 9, 22, 1, 6, 5, 7, 2, 12, 8, 15, 16, 14, 20, 18, 10, 19, 17, 11, 13, 21 }
+                .Select((num, ix) => new KeyValuePair<int, int>(num, ix))
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
+        public static int CompareClasses(int i1, int i2) =>
+            compareVehicleClassDict[i1].CompareTo(compareVehicleClassDict[i2]);
+
 
         public struct VehicleFilter
         {
             public string Name;
             public string Manufacturer;
             public string CustomClass;
-            public string DefaultClass;
+            public string RockstarClass;
 
             private bool IsNameMatching(VehicleModelInfo info, string name)
             {
@@ -784,12 +787,12 @@ namespace vMenuClient.data
                 return info.CustomVehicleClasses.Contains(CustomClass);
             }
 
-            private bool IsDefaultClassMatching(VehicleModelInfo info)
+            private bool IsRockstarClassMatching(VehicleModelInfo info)
             {
-                if (string.IsNullOrEmpty(DefaultClass))
+                if (string.IsNullOrEmpty(RockstarClass))
                     return true;
 
-                return info.ClassName == DefaultClass;
+                return info.ClassName == RockstarClass;
             }
 
             public bool IsMatching(VehicleModelInfo info, string name = null) =>
@@ -797,247 +800,7 @@ namespace vMenuClient.data
                 IsNameMatching(info, name) &&
                 IsManufacturerMatching(info) &&
                 IsCustomClassMatching(info) &&
-                IsDefaultClassMatching(info);
-        }
-
-
-        private static Dictionary<int, int> compareVehicleClassDict =
-            new int[] { 0, 3, 4, 9, 22, 1, 6, 5, 7, 2, 12, 8, 15, 16, 14, 20, 18, 10, 19, 17, 11, 13, 21 }
-                .Select((num, ix) => new KeyValuePair<int, int>(num, ix))
-                .ToDictionary(kv => kv.Key, kv => kv.Value);
-        public static int CompareClasses(int i1, int i2) =>
-            compareVehicleClassDict[i1].CompareTo(compareVehicleClassDict[i2]);
-
-
-
-        public class CustomVehicleClass
-        {
-            public CustomVehicleClass(string name, List<VehicleModelInfo> vehicles)
-            {
-                Name = name;
-                Vehicles = vehicles;
-            }
-
-            public CustomVehicleClass(string name, List<string> shortnames)
-            {
-                Name = name;
-                Vehicles = new List<VehicleModelInfo>();
-                foreach (var shortname in shortnames)
-                {
-                    VehicleModelInfo vi;
-                    if (AllVehicles.TryGetValue(shortname, out vi))
-                    {
-                        Vehicles.Add(vi);
-                    }
-                    else
-                    {
-                        Debug.WriteLine($"^1[vMenu] [ERROR]^7 Vehicle class \"{name}\" contains invalid model \"{shortname}\"");
-                    }
-                }
-            }
-
-            public string Name { get; }
-            public List<VehicleModelInfo> Vehicles { get; }
-        }
-
-        public class CustomVehicleClassJson
-        {
-            public string Name { get; set; }
-            public List<string> Vehicles { get; set; }
-
-            public string Builtin { get; set; }
-        }
-
-        private static readonly Dictionary<string, int> permissiveClassNameToId =
-            new Dictionary<string, int>
-            {
-                ["compacts"] = 0,
-                ["compact"] = 0,
-
-                ["sedans"] = 1,
-                ["sedan"] = 1,
-
-                ["suvs"] = 2,
-                ["suv"] = 2,
-
-                ["coupes"] = 3,
-                ["coupe"] = 3,
-
-                ["muscle"] = 4,
-                ["muscles"] = 4,
-
-                ["sports classics"] = 5,
-                ["sports-classics"] = 5,
-                ["sportsclassics"] = 5,
-                ["sports classic"] = 5,
-                ["sports-classic"] = 5,
-                ["sportsclassic"] = 5,
-
-                ["sports"] = 6,
-                ["sport"] = 6,
-
-                ["super"] = 7,
-                ["supers"] = 7,
-
-                ["motorcycles"] = 8,
-                ["motorcycle"] = 8,
-
-                ["off-road"] = 9,
-                ["off road"] = 9,
-                ["offroad"] = 9,
-                ["off-roads"] = 9,
-                ["off roads"] = 9,
-                ["offroads"] = 9,
-
-                ["industrial"] = 10,
-                ["industrials"] = 10,
-
-                ["utility"] = 11,
-                ["utilitys"] = 11,
-                ["utilities"] = 11,
-
-                ["vans"] = 12,
-                ["van"] = 12,
-
-                ["cycles"] = 13,
-                ["cycle"] = 13,
-
-                ["boats"] = 14,
-                ["boat"] = 14,
-
-                ["helicopters"] = 15,
-                ["helicopter"] = 15,
-
-                ["planes"] = 16,
-                ["plane"] = 16,
-
-                ["service"] = 17,
-                ["services"] = 17,
-
-                ["emergency"] = 18,
-                ["emergencys"] = 18,
-                ["emergencies"] = 18,
-
-                ["military"] = 19,
-                ["militarys"] = 19,
-                ["militaries"] = 19,
-
-                ["commercial"] = 20,
-                ["commercials"] = 20,
-
-                ["trains"] = 21,
-                ["train"] = 21,
-
-                ["open wheel"] = 22,
-                ["open-wheel"] = 22,
-                ["openwheel"] = 22,
-
-                ["open wheels"] = 22,
-                ["open-wheels"] = 22,
-                ["openwheels"] = 22,
-            };
-
-        private static Dictionary<int, List<VehicleModelInfo>> vehiclesByClass;
-        private static Dictionary<int, List<VehicleModelInfo>> VehiclesByClass
-        {
-            get
-            {
-                if (vehiclesByClass != null)
-                    return vehiclesByClass;
-
-                vehiclesByClass = AllVehicles.Values
-                    .ToLookup(vi => vi.Class)
-                    .ToDictionary(g => g.Key, g => g.ToList());
-                return vehiclesByClass;
-            }
-        }
-
-        private static CustomVehicleClass CustomVehicleClassFromJson(CustomVehicleClassJson customVehicleClassJson)
-        {
-            if (!string.IsNullOrEmpty(customVehicleClassJson.Builtin))
-            {
-                string builtinClassName = customVehicleClassJson.Builtin;
-                int builtinClassId;
-                if (permissiveClassNameToId.TryGetValue(builtinClassName.ToLower(), out builtinClassId))
-                {
-                    var name = ClassIdToName[builtinClassId];
-                    var vehicles = VehiclesByClass[builtinClassId];
-
-                    return new CustomVehicleClass(name, vehicles);
-                }
-                else
-                {
-                    Debug.WriteLine($"^1[vMenu] [ERROR]^7 Invalid builtin class \"{builtinClassName.ToLower()}\"");
-                    return null;
-                }
-            }
-            else
-            {
-                var name = customVehicleClassJson.Name ?? "";
-                if (string.IsNullOrEmpty(name))
-                {
-                    Debug.WriteLine($"^3[vMenu] [WARNING]^7 Empty custom class name");
-                }
-
-                var vehicles = customVehicleClassJson.Vehicles ?? new List<string>();
-                if (vehicles.Count == 0)
-                {
-                    Debug.WriteLine($"^3[vMenu] [WARNING]^7 Empty custom class \"{name}\"");
-                }
-
-                return new CustomVehicleClass(name, vehicles);
-            }
-        }
-
-        private static List<CustomVehicleClass> customVehicleClasses = null;
-        public static List<CustomVehicleClass> CustomVehiclesClasses
-        {
-            get
-            {
-                if (customVehicleClasses != null)
-                    return customVehicleClasses;
-
-                customVehicleClasses = new List<CustomVehicleClass>();
-
-                var json = LoadResourceFile(GetCurrentResourceName(), "config/vehicle-classes.json");
-                if (string.IsNullOrEmpty(json))
-                {
-                    return customVehicleClasses;
-                }
-
-                List<CustomVehicleClassJson> customVehicleClassesJson;
-                try
-                {
-                    customVehicleClassesJson = JsonConvert.DeserializeObject<List<CustomVehicleClassJson>>(json);
-                }
-                catch
-                {
-                    Debug.WriteLine($"^1[vMenu] [ERROR]^7 Could not parse \"vehicle-classes.json\"");
-                    return customVehicleClasses;
-                }
-
-                foreach (var customVehicleClassJson in customVehicleClassesJson)
-                {
-                    var customClass = CustomVehicleClassFromJson(customVehicleClassJson);
-                    if (customClass != null)
-                        customVehicleClasses.Add(customClass);
-                }
-
-                return customVehicleClasses;
-            }
-        }
-
-        private static Dictionary<string, CustomVehicleClass> customVehicleClassesDict = null;
-        public static Dictionary<string, CustomVehicleClass> CustomVehicleClassesDict
-        {
-            get
-            {
-                if (customVehicleClassesDict != null)
-                    return customVehicleClassesDict;
-
-                customVehicleClassesDict = CustomVehiclesClasses.ToDictionary(c => c.Name, c => c);
-                return customVehicleClassesDict;
-            }
+                IsRockstarClassMatching(info);
         }
     }
 }

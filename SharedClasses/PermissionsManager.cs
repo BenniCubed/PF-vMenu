@@ -8,6 +8,8 @@ using static vMenuShared.ConfigManager;
 
 using static CitizenFX.Core.Native.API;
 
+using Newtonsoft.Json;
+
 namespace vMenuShared
 {
     public static class PermissionsManager
@@ -532,7 +534,7 @@ namespace vMenuShared
         /// Sets the permissions for a specific player (checks server side, sends event to client side).
         /// </summary>
         /// <param name="player"></param>
-        public static void SetPermissionsForPlayer([FromSource] Player player)
+        public async static void SetPermissionsForPlayer([FromSource] Player player)
         {
             if (player == null)
             {
@@ -605,7 +607,12 @@ namespace vMenuShared
 
             // Also tell the client to do the addons setup.
             player.TriggerEvent("vMenu:SetAddons");
-            player.TriggerEvent("vMenu:SetExtras");
+
+            Dictionary<string, string> extras = new Dictionary<string, string>
+            {
+                ["vehicleInfo"] = await vMenuServer.MainServer.Hooks.VehicleInfo.FetchResult,
+            };
+            player.TriggerEvent("vMenu:SetExtras", JsonConvert.SerializeObject(extras));
         }
 #endif
 #if CLIENT

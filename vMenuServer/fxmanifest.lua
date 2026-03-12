@@ -36,11 +36,20 @@ files {
     'plates/*.png',
     'vehiclethumbnail.html',
 }
-client_script { 'plugin-config.lua', 'plugins/***/*.lua', 'plugins/*.lua' }
 
+client_script {
+    'plugin-config.lua',
+    'plugins/***/*.lua',
+    'plugins/*.lua',
+    'vMenuClient.net.dll'
+}
 
-client_script 'vMenuClient.net.dll'
-server_script 'vMenuServer.net.dll'
+server_script {
+    'hooks/*.lua',
+    'internal/hooks.lua',
+    'vMenuServer.net.dll',
+}
+
 exports {
     "PluginAddMenuItem",
     "PluginMenuItem",
