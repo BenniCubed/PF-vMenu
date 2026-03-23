@@ -39,7 +39,7 @@ local function addHookHandler(hookFn, hooksGroup, hookName)
             if hookResultDebuggingPattern ~= "" and string.find(hookResultDebuggingPattern, hookPath) then
                 print(hookPath .. ":\n" ..
                     "  Args: " .. dumpTable(args) .. "\n" ..
-                    "  Result:" .. dumpTable(result))
+                    "  Result: " .. dumpTable(result))
             end
             debugHookCall(hookPath, "exit")
             TriggerEvent("vMenu:RequestManager:Response", requestId, json.encode(result or {}))
@@ -80,4 +80,5 @@ local function addHookHandlers(hooksGroup, hookNames)
     end
 end
 
-addHookHandlers("VehicleInfo", { "fetch" }) -- vehicleInfo.lua
+addHookHandlers("VehicleInfo", { "fetch" })                               -- vehicleInfo.lua
+addHookHandlers("Usersettings", { "getInfo", "fetchAllFor", "storeFor" }) -- usersettings.lua

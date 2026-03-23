@@ -59,6 +59,61 @@ namespace vMenuClient
             RegisterNuiCallbackType("userInputCancel");
         }
 
+        [EventHandler("vMenu:UpdateUsersetting")]
+        public void UpdateUsersettingHandler(string key, object value, bool sync = false)
+        {
+            var ok = data.Usersettings.TryUpdateUsersetting(key, value, false, sync);
+            if (!ok || MainMenu.MiscSettingsMenu == null)
+            {
+                return;
+            }
+
+            var usersettingsMenu = MainMenu.MiscSettingsMenu.UsersettingsMenu;
+            if (usersettingsMenu == null)
+            {
+                return;
+            }
+
+            usersettingsMenu.UpdateUsersettingItemState(key, value);
+        }
+
+        [EventHandler("vMenu:GetUsersetting")]
+        public void GetUsersettingHandler(string key, long? requestId)
+        {
+            object response;
+
+            var ok = data.Usersettings.UsersettingsDict.TryGetValue(key, out var value);
+            if (ok)
+            {
+                response = new { key, value, requestId };
+            }
+            else
+            {
+                response = new
+                {
+                    key,
+                    value = (object)null,
+                    requestId,
+                    error = $"Usersetting with key \"{key}\" does not exist"
+                };
+            }
+
+            TriggerEvent("vMenu:GetUsersettingResponse", JsonConvert.SerializeObject(response));
+        }
+
+        [Tick]
+        public async Task SyncUsersettings()
+        {
+            // Auto-sync usersettings regularly
+
+            if (data.Usersettings.UsersettingsDict.Count != 0)
+            {
+                data.Usersettings.SyncUpdatedUsersettings();
+            }
+
+            await Delay(5000);
+        }
+
         [EventHandler("__cfx_nui:importData")]
         internal void ImportData(IDictionary<string, object> data, CallbackDelegate cb)
         {
@@ -234,6 +289,12 @@ namespace vMenuClient
 
             var extras = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
             VehicleData.InitVehicleInfo(JsonConvert.DeserializeObject<VehicleData.VehicleInfoJson>(extras["vehicleInfo"]));
+
+            extras.TryGetValue("usersettingsInfo", out var usersettingsInfo);
+            data.Usersettings.InitUsersettingsInfo(usersettingsInfo);
+
+            extras.TryGetValue("usersettings", out var usersettings);
+            data.Usersettings.InitUsersettings(usersettings);
 
             MainMenu.ConfigOptionsSetupComplete = true;
         }

@@ -608,9 +608,15 @@ namespace vMenuShared
             // Also tell the client to do the addons setup.
             player.TriggerEvent("vMenu:SetAddons");
 
+            var usersettings = await vMenuServer.RequestManager.Send(
+                vMenuServer.MainServer.Hooks.Usersettings.FETCH_ALL_FOR_EVENT_NAME,
+                $"{player.Handle}");
+
             Dictionary<string, string> extras = new Dictionary<string, string>
             {
                 ["vehicleInfo"] = await vMenuServer.MainServer.Hooks.VehicleInfo.FetchResult,
+                ["usersettingsInfo"] = await vMenuServer.MainServer.Hooks.Usersettings.GetInfoResult,
+                ["usersettings"] = usersettings,
             };
             player.TriggerEvent("vMenu:SetExtras", JsonConvert.SerializeObject(extras));
         }

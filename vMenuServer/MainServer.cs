@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using CitizenFX.Core;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using vMenuShared;
 
@@ -209,6 +210,7 @@ namespace vMenuServer
                     else
                     {
                         Hooks.VehicleInfo.FetchResult = RequestManager.Send(Hooks.VehicleInfo.FETCH_EVENT_NAME);
+                        Hooks.Usersettings.GetInfoResult = RequestManager.Send(Hooks.Usersettings.GET_INFO_EVENT_NAME);
 
                         // Add event handlers.
                         EventHandlers.Add("vMenu:GetPlayerIdentifiers", new Action<Player, object>(([FromSource] Player player, object callback) =>
@@ -436,13 +438,26 @@ namespace vMenuServer
         #region Hooks
         public static class Hooks
         {
-            private const string HOOKS_PREFIX = "Hooks:";
+            private const string HOOKS_PREFIX_ = "Hooks:";
 
             public static class VehicleInfo
             {
-                public const string FETCH_EVENT_NAME = HOOKS_PREFIX + "VehicleInfo:fetch";
+                private const string HOOKS_PREFIX = HOOKS_PREFIX_ + "VehicleInfo:";
+
+                public const string FETCH_EVENT_NAME = HOOKS_PREFIX + "fetch";
 
                 public static Task<string> FetchResult { get; set; }
+            }
+
+            public static class Usersettings
+            {
+                private const string HOOKS_PREFIX = HOOKS_PREFIX_ + "Usersettings:";
+
+                public const string GET_INFO_EVENT_NAME = HOOKS_PREFIX + "getInfo";
+                public const string FETCH_ALL_FOR_EVENT_NAME = HOOKS_PREFIX + "fetchAllFor";
+                public const string STORE_FOR_EVENT_NAME = HOOKS_PREFIX + "storeFor";
+
+                public static Task<string> GetInfoResult { get; set; }
             }
         }
         #endregion
@@ -451,6 +466,18 @@ namespace vMenuServer
         public async void ReceiveRequest([FromSource] Player player, string json)
         {
             await ClientRemoteKeyValueStore.HandleRequest(player, json);
+        }
+
+        [EventHandler("vMenu:SyncUpdatedUsersettings")]
+        public async void SyncUpdatedUsersettingsHandler([FromSource] Player player, string json)
+        {
+            await RequestManager.Send(
+                Hooks.Usersettings.STORE_FOR_EVENT_NAME,
+                JsonConvert.SerializeObject(new
+                {
+                    player = player.Handle,
+                    settings = JsonConvert.DeserializeObject(json)
+                }));
         }
 
         #region kick players from personal vehicle
