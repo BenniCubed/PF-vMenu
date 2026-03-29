@@ -265,3 +265,5 @@ external/
 
 *.cmd
 *.cmd.bak
+
+build/
