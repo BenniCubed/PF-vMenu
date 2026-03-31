@@ -96,10 +96,10 @@ namespace vMenuClient.menus
                 {4, "plate05"},
                 {5, "yankton_plate"},
             };
-            foreach ( var Plates in new Dictionary<int, string>(PlateList))
+            foreach (var Plates in new Dictionary<int, string>(PlateList))
             {
-                var stuff = GetConvar("vmenu_plate_override_"+Plates.Value, "false");
-                if (!(stuff == "false" || stuff == null || stuff == "") )
+                var stuff = GetConvar("vmenu_plate_override_" + Plates.Value, "false");
+                if (!(stuff == "false" || stuff == null || stuff == ""))
                 {
                     var data2 = JsonConvert.DeserializeObject<vMenuShared.ConfigManager.PlateStruct>(stuff);
                     if (Plates.Key == 0)
@@ -475,10 +475,10 @@ namespace vMenuClient.menus
                                     color = VehicleData.MetalColors[newIndex].id;
                                     break;
                                 case 4:
-                                    color = VehicleData.UtilColors[newIndex].id;
+                                    color = VehicleData.WornColors[newIndex].id;
                                     break;
                                 case 5:
-                                    color = VehicleData.WornColors[newIndex].id;
+                                    color = VehicleData.UtilColors[newIndex].id;
                                     break;
                             }
 
@@ -1210,58 +1210,40 @@ namespace vMenuClient.menus
             VehicleColorsMenu.OnItemSelect += (sender, item, index) =>
             {
                 #region reset checkboxes state when opening the menu.
-                    var veh = GetVehicle();
-                    var redneon = 0;
-                    var greenneon = 0;
-                    var blueneon = 0;
-                    GetVehicleNeonLightsColour(veh.Handle, ref redneon, ref greenneon, ref blueneon);
-                    RedSliderUnderglow.Position = redneon;
-                    GreenSliderUnderglow.Position = greenneon;
-                    BlueSliderUnderglow.Position = blueneon;
-                    RedSliderUnderglow.Text = $"Red Color ({redneon})";
-                    GreenSliderUnderglow.Text = $"Green Color ({greenneon})";
-                    BlueSliderUnderglow.Text = $"Blue Color ({blueneon})";
-                    RedSliderUnderglow.BarColor = System.Drawing.Color.FromArgb(255, redneon, greenneon, blueneon);
-                    GreenSliderUnderglow.BarColor = System.Drawing.Color.FromArgb(255, redneon, greenneon, blueneon);
-                    BlueSliderUnderglow.BarColor = System.Drawing.Color.FromArgb(255, redneon, greenneon, blueneon);
-                    string hexValue = redneon.ToString("X2") + greenneon.ToString("X2") + blueneon.ToString("X2");
-                    HexColorUnderglow.Label = $"#{hexValue}";
-                    if (veh != null)
+                var veh = GetVehicle();
+                var redneon = 0;
+                var greenneon = 0;
+                var blueneon = 0;
+                GetVehicleNeonLightsColour(veh.Handle, ref redneon, ref greenneon, ref blueneon);
+                RedSliderUnderglow.Position = redneon;
+                GreenSliderUnderglow.Position = greenneon;
+                BlueSliderUnderglow.Position = blueneon;
+                RedSliderUnderglow.Text = $"Red Color ({redneon})";
+                GreenSliderUnderglow.Text = $"Green Color ({greenneon})";
+                BlueSliderUnderglow.Text = $"Blue Color ({blueneon})";
+                RedSliderUnderglow.BarColor = System.Drawing.Color.FromArgb(255, redneon, greenneon, blueneon);
+                GreenSliderUnderglow.BarColor = System.Drawing.Color.FromArgb(255, redneon, greenneon, blueneon);
+                BlueSliderUnderglow.BarColor = System.Drawing.Color.FromArgb(255, redneon, greenneon, blueneon);
+                string hexValue = redneon.ToString("X2") + greenneon.ToString("X2") + blueneon.ToString("X2");
+                HexColorUnderglow.Label = $"#{hexValue}";
+                if (veh != null)
+                {
+                    if (veh.Mods.HasNeonLights)
                     {
-                        if (veh.Mods.HasNeonLights)
-                        {
-                            underglowFront.Checked = veh.Mods.HasNeonLight(VehicleNeonLight.Front) && veh.Mods.IsNeonLightsOn(VehicleNeonLight.Front);
-                            underglowBack.Checked = veh.Mods.HasNeonLight(VehicleNeonLight.Back) && veh.Mods.IsNeonLightsOn(VehicleNeonLight.Back);
-                            underglowLeft.Checked = veh.Mods.HasNeonLight(VehicleNeonLight.Left) && veh.Mods.IsNeonLightsOn(VehicleNeonLight.Left);
-                            underglowRight.Checked = veh.Mods.HasNeonLight(VehicleNeonLight.Right) && veh.Mods.IsNeonLightsOn(VehicleNeonLight.Right);
+                        underglowFront.Checked = veh.Mods.HasNeonLight(VehicleNeonLight.Front) && veh.Mods.IsNeonLightsOn(VehicleNeonLight.Front);
+                        underglowBack.Checked = veh.Mods.HasNeonLight(VehicleNeonLight.Back) && veh.Mods.IsNeonLightsOn(VehicleNeonLight.Back);
+                        underglowLeft.Checked = veh.Mods.HasNeonLight(VehicleNeonLight.Left) && veh.Mods.IsNeonLightsOn(VehicleNeonLight.Left);
+                        underglowRight.Checked = veh.Mods.HasNeonLight(VehicleNeonLight.Right) && veh.Mods.IsNeonLightsOn(VehicleNeonLight.Right);
 
-                            underglowFront.Enabled = true;
-                            underglowBack.Enabled = true;
-                            underglowLeft.Enabled = true;
-                            underglowRight.Enabled = true;
+                        underglowFront.Enabled = true;
+                        underglowBack.Enabled = true;
+                        underglowLeft.Enabled = true;
+                        underglowRight.Enabled = true;
 
-                            underglowFront.LeftIcon = MenuItem.Icon.NONE;
-                            underglowBack.LeftIcon = MenuItem.Icon.NONE;
-                            underglowLeft.LeftIcon = MenuItem.Icon.NONE;
-                            underglowRight.LeftIcon = MenuItem.Icon.NONE;
-                        }
-                        else
-                        {
-                            underglowFront.Checked = false;
-                            underglowBack.Checked = false;
-                            underglowLeft.Checked = false;
-                            underglowRight.Checked = false;
-
-                            underglowFront.Enabled = false;
-                            underglowBack.Enabled = false;
-                            underglowLeft.Enabled = false;
-                            underglowRight.Enabled = false;
-
-                            underglowFront.LeftIcon = MenuItem.Icon.LOCK;
-                            underglowBack.LeftIcon = MenuItem.Icon.LOCK;
-                            underglowLeft.LeftIcon = MenuItem.Icon.LOCK;
-                            underglowRight.LeftIcon = MenuItem.Icon.LOCK;
-                        }
+                        underglowFront.LeftIcon = MenuItem.Icon.NONE;
+                        underglowBack.LeftIcon = MenuItem.Icon.NONE;
+                        underglowLeft.LeftIcon = MenuItem.Icon.NONE;
+                        underglowRight.LeftIcon = MenuItem.Icon.NONE;
                     }
                     else
                     {
@@ -1280,8 +1262,26 @@ namespace vMenuClient.menus
                         underglowLeft.LeftIcon = MenuItem.Icon.LOCK;
                         underglowRight.LeftIcon = MenuItem.Icon.LOCK;
                     }
+                }
+                else
+                {
+                    underglowFront.Checked = false;
+                    underglowBack.Checked = false;
+                    underglowLeft.Checked = false;
+                    underglowRight.Checked = false;
 
-                    underglowColor.ListIndex = GetIndexFromColor();
+                    underglowFront.Enabled = false;
+                    underglowBack.Enabled = false;
+                    underglowLeft.Enabled = false;
+                    underglowRight.Enabled = false;
+
+                    underglowFront.LeftIcon = MenuItem.Icon.LOCK;
+                    underglowBack.LeftIcon = MenuItem.Icon.LOCK;
+                    underglowLeft.LeftIcon = MenuItem.Icon.LOCK;
+                    underglowRight.LeftIcon = MenuItem.Icon.LOCK;
+                }
+
+                underglowColor.ListIndex = GetIndexFromColor();
 
                 #endregion
             };
@@ -1324,31 +1324,31 @@ namespace vMenuClient.menus
                         if (veh.Mods.HasNeonLights)
                         {
                             veh.Mods.NeonLightsColor = GetColorFromIndex(newIndex);
-                                var redneon = 0;
-                                var greenneon = 0;
-                                var blueneon = 0;
+                            var redneon = 0;
+                            var greenneon = 0;
+                            var blueneon = 0;
                             GetVehicleNeonLightsColour(veh.Handle, ref redneon, ref greenneon, ref blueneon);
 
-                                RedSliderUnderglow.Position = redneon;
-                                GreenSliderUnderglow.Position = greenneon;
-                                BlueSliderUnderglow.Position = blueneon;
-                                RedSliderUnderglow.Text = $"Red Color ({redneon})";
-                                GreenSliderUnderglow.Text = $"Green Color ({greenneon})";
-                                BlueSliderUnderglow.Text = $"Blue Color ({blueneon})";
-                                RedSliderUnderglow.BarColor = System.Drawing.Color.FromArgb(255, redneon, greenneon, blueneon);
-                                GreenSliderUnderglow.BarColor = System.Drawing.Color.FromArgb(255, redneon, greenneon, blueneon);
-                                BlueSliderUnderglow.BarColor = System.Drawing.Color.FromArgb(255, redneon, greenneon, blueneon);
-                                string hexValue = redneon.ToString("X2") + greenneon.ToString("X2") + blueneon.ToString("X2");
-                                HexColorUnderglow.Label = $"#{hexValue}";
+                            RedSliderUnderglow.Position = redneon;
+                            GreenSliderUnderglow.Position = greenneon;
+                            BlueSliderUnderglow.Position = blueneon;
+                            RedSliderUnderglow.Text = $"Red Color ({redneon})";
+                            GreenSliderUnderglow.Text = $"Green Color ({greenneon})";
+                            BlueSliderUnderglow.Text = $"Blue Color ({blueneon})";
+                            RedSliderUnderglow.BarColor = System.Drawing.Color.FromArgb(255, redneon, greenneon, blueneon);
+                            GreenSliderUnderglow.BarColor = System.Drawing.Color.FromArgb(255, redneon, greenneon, blueneon);
+                            BlueSliderUnderglow.BarColor = System.Drawing.Color.FromArgb(255, redneon, greenneon, blueneon);
+                            string hexValue = redneon.ToString("X2") + greenneon.ToString("X2") + blueneon.ToString("X2");
+                            HexColorUnderglow.Label = $"#{hexValue}";
                         }
                     }
                 }
             };
             UnderglowColorsMenu.OnSliderPositionChange += (m, sliderItem, oldPosition, newPosition, itemIndex) =>
             {
-                    var red = 0;
-                    var green = 0;
-                    var blue = 0;
+                var red = 0;
+                var green = 0;
+                var blue = 0;
                 if (sliderItem == RedSliderUnderglow)
                 {
                     //RedSliderUnderglow.Position;
@@ -1376,15 +1376,15 @@ namespace vMenuClient.menus
                     red = RedSliderUnderglow.Position;
                     green = GreenSliderUnderglow.Position;
                     blue = newPosition;
-                   // BlueSliderUnderglow.Position = newPosition;
+                    // BlueSliderUnderglow.Position = newPosition;
                     BlueSliderUnderglow.Text = $"Blue Color ({newPosition})";
                     RedSliderUnderglow.BarColor = System.Drawing.Color.FromArgb(255, RedSliderUnderglow.Position, GreenSliderUnderglow.Position, newPosition);
                     GreenSliderUnderglow.BarColor = System.Drawing.Color.FromArgb(255, RedSliderUnderglow.Position, GreenSliderUnderglow.Position, newPosition);
                     BlueSliderUnderglow.BarColor = System.Drawing.Color.FromArgb(255, RedSliderUnderglow.Position, GreenSliderUnderglow.Position, newPosition);
                 }
                 Vehicle veh = GetVehicle();
-                    string hexValue = red.ToString("X2") + green.ToString("X2") + blue.ToString("X2");
-                    HexColorUnderglow.Label = $"#{hexValue}";
+                string hexValue = red.ToString("X2") + green.ToString("X2") + blue.ToString("X2");
+                HexColorUnderglow.Label = $"#{hexValue}";
                 SetVehicleNeonLightsColour(veh.Handle, red, green, blue);
             };
             #endregion
