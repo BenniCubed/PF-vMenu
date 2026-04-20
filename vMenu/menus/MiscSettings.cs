@@ -31,8 +31,6 @@ namespace vMenuClient.menus
         private Menu timecycleModifiersMenu;
         private Menu entitySpawnerMenu;
 
-        public Usersettings UsersettingsMenu { get; private set; }
-
         private Menu hudMenu;
 
         public enum SpeedDisplayState
@@ -714,24 +712,6 @@ namespace vMenuClient.menus
             }
 
             #endregion
-
-            if (data.Usersettings.UsersettingsSpecs.Count > 0)
-            {
-                var usersettingsBtn = new MenuItem(
-                    data.Usersettings.UsersettingsMenuName,
-                    data.Usersettings.UsersettingsMenuDescription)
-                {
-                    Label = "→→→",
-                };
-
-                UsersettingsMenu = new Usersettings();
-                var usersettingsMenu = UsersettingsMenu.GetMenu().Menu;
-
-                menu.AddMenuItem(usersettingsBtn);
-                MenuController.AddSubmenu(menu, usersettingsMenu);
-                MenuController.BindMenuItem(menu, usersettingsMenu, usersettingsBtn);
-            }
-
 
             keybindMenu.AddMenuItem(disableControllerKey);
             // Keybind options

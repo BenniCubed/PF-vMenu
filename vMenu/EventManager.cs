@@ -68,7 +68,7 @@ namespace vMenuClient
                 return;
             }
 
-            var usersettingsMenu = MainMenu.MiscSettingsMenu.UsersettingsMenu;
+            var usersettingsMenu = MainMenu.UsersettingsMenu;
             if (usersettingsMenu == null)
             {
                 return;

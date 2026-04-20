@@ -56,6 +56,7 @@ namespace vMenuClient
         public static EnhancedCamera EnhancedCameraMenu { get; private set; }
         public static PluginSettings PluginSettingsMenu { get; private set; }
         public static MiscSettings MiscSettingsMenu { get; private set; }
+        public static menus.Usersettings UsersettingsMenu { get; private set; }
         public static About AboutMenu { get; private set; }
         public static bool NoClipEnabled { get { return NoClip.IsNoclipActive(); } set { NoClip.SetNoclipActive(value); } }
         public static IPlayerList PlayersList;
@@ -858,6 +859,14 @@ namespace vMenuClient
         /// </summary>
         private static void CreateSubmenus()
         {
+            if (data.Usersettings.UsersettingsSpecs.Count > 0)
+            {
+                UsersettingsMenu = new menus.Usersettings();
+                var usersettingsMenu = UsersettingsMenu.GetMenu().Menu;
+
+                Menu.AddSubmenu(usersettingsMenu, data.Usersettings.UsersettingsMenuDescription);
+            }
+
             #region Submenu Creation
             if (IsAllowed(Permission.VSMenu))
             {
