@@ -13,13 +13,13 @@ namespace vMenuClient
     {
         private static List<Tuple<string, float>> speeds = new List<Tuple<string, float>>
         {
-            new Tuple<string, float>("Super Slow", 20.0f),
-            new Tuple<string, float>("Very Slow", 50.0f),
-            new Tuple<string, float>("Slow", 100.0f),
-            new Tuple<string, float>("Normal", 250.0f),
-            new Tuple<string, float>("Fast", 1000.0f),
-            new Tuple<string, float>("Very Fast", 2000.0f),
-            new Tuple<string, float>("Super Fast", 4000.0f),
+            new Tuple<string, float>("Very Slow", 20.0f),
+            new Tuple<string, float>("Slow", 50.0f),
+            new Tuple<string, float>("Normal", 100.0f),
+            new Tuple<string, float>("Fast", 250.0f),
+            new Tuple<string, float>("Very Fast", 1000.0f),
+            new Tuple<string, float>("Super Fast", 2000.0f),
+            new Tuple<string, float>("Extremely Fast", 4000.0f),
             new Tuple<string, float>("Lightning Fast", 10000.0f),
         };
         private static Dictionary<string, int> speedsMap = speeds
