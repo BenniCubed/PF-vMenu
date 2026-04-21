@@ -98,7 +98,7 @@ namespace vMenuClient
                 };
             }
 
-            TriggerEvent("vMenu:GetUsersettingResponse", JsonConvert.SerializeObject(response));
+            TriggerEvent("vMenu:GetUsersettingResponse", response);
         }
 
         [Tick]
