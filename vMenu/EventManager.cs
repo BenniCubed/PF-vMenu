@@ -78,7 +78,7 @@ namespace vMenuClient
         }
 
         [EventHandler("vMenu:GetUsersetting")]
-        public void GetUsersettingHandler(string key, long? requestId)
+        public void GetUsersettingHandler(string key, object requestId)
         {
             object response;
 
