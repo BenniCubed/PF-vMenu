@@ -135,8 +135,6 @@ namespace vMenuClient
             var localKvs = GetAll();
             var remoteKvs = await RemoteKeyValueStore.GetAll();
 
-            Console.WriteLine("Keys: " + string.Join(",", remoteKvs.Keys));
-
             var remoteDiffLocal = remoteKvs.Where(kv =>
                 !localKvs.ContainsKey(kv.Key) ||
                 localKvs[kv.Key].Value != kv.Value.Value ||

@@ -116,6 +116,7 @@ namespace vMenuShared
             VOPlaneBombs,
             VOVehiclesBlacklist,
             VODisableFromDefaultList,
+            VOSaveMods,
             #endregion
 
             // Vehicle Spawner

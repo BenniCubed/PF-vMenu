@@ -11,6 +11,7 @@ using MenuAPI;
 using Newtonsoft.Json;
 
 using vMenuClient.data;
+using vMenuClient.MenuAPIWrapper;
 
 using static CitizenFX.Core.Native.API;
 using static vMenuClient.CommonFunctions;
@@ -171,6 +172,12 @@ namespace vMenuClient.menus
                 }
             }
 
+            var saveModifications = WMenuItem.CreateConfirmationButton("Save Modifications", "Save your vehicle's modifications. They will be applied when you spawn the vehicle again.");
+            saveModifications.Confirmed += (o, e) =>
+            {
+                SaveVehicleMods(GetVehicle());
+            };
+
             var licensePlates = new List<string> { plate01, plate02, plate03, plate04, plate05, plate06 };
             var setLicensePlateType = new MenuListItem("License Plate Type", licensePlates, 0, "Select the ~b~license plate type~s~.");
             #endregion
@@ -232,6 +239,10 @@ namespace vMenuClient.menus
                 menu.AddMenuItem(setLicensePlateText); // SET LICENSE PLATE TEXT
                 menu.AddMenuItem(setLicensePlateType); // SET LICENSE PLATE TYPE
             }
+            if (IsAllowed(Permission.VOSaveMods))
+            {
+                menu.AddMenuItem(saveModifications.MenuItem);
+            }
             #endregion
 
             #region Bind Submenus to their buttons.
@@ -258,6 +269,14 @@ namespace vMenuClient.menus
                         if (item == setLicensePlateText)
                         {
                             SetLicensePlateCustomText();
+                        }
+                        else if (item == saveModifications.MenuItem)
+                        {
+                            saveModifications.OnSelected(new WMenuItem.SelectedEventArgs
+                            {
+                                ItemIndex = index,
+                                Item = saveModifications.MenuItem,
+                            });
                         }
                     }
                 }

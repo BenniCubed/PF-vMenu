@@ -1312,7 +1312,7 @@ namespace vMenuClient
         /// <param name="vehicleName">Vehicle model name. If "custom" the user will be asked to enter a model name.</param>
         /// <param name="spawnInside">Warp the player inside the vehicle after spawning.</param>
         /// <param name="replacePrevious">Replace the previous vehicle of the player.</param>
-        public static async Task<int> SpawnVehicle(string vehicleName = "custom", bool spawnInside = false, bool replacePrevious = false, bool destructible = false, bool upgraded = false)
+        public static async Task<int> SpawnVehicle(string vehicleName = "custom", bool spawnInside = false, bool replacePrevious = false, bool destructible = false, bool upgraded = false, bool withSavedModifications = true)
         {
             if (vehicleName == "custom")
             {
@@ -1324,7 +1324,7 @@ namespace vMenuClient
                     // Convert it into a model hash.
                     var model = (uint)GetHashKey(result);
                     return await SpawnVehicle(vehicleHash: model, spawnInside: spawnInside, replacePrevious: replacePrevious, skipLoad: false, vehicleInfo: new VehicleInfo(),
-                        saveName: null, destructible: destructible, upgraded: upgraded);
+                        saveName: null, destructible: destructible, upgraded: upgraded, withSavedModifications: withSavedModifications);
                 }
                 // Result was invalid.
                 else
@@ -1334,7 +1334,7 @@ namespace vMenuClient
                 }
             }
             return await SpawnVehicle(vehicleHash: (uint)GetHashKey(vehicleName), spawnInside: spawnInside, replacePrevious: replacePrevious, skipLoad: false,
-                vehicleInfo: new VehicleInfo(), saveName: null, destructible: destructible, upgraded: upgraded);
+                vehicleInfo: new VehicleInfo(), saveName: null, destructible: destructible, upgraded: upgraded, withSavedModifications: withSavedModifications);
         }
         #endregion
 
@@ -1352,12 +1352,14 @@ namespace vMenuClient
 
             var destructible = false;
             var upgraded = false;
+            var withSavedModifications = false;
             if (MainMenu.VehicleSpawnerMenu is VehicleSpawner vehicleSpawner)
             {
                 spawnInside = spawnInside ?? vehicleSpawner.SpawnInVehicle;
                 replacePrevious = replacePrevious ?? vehicleSpawner.ReplaceVehicle;
                 destructible = vehicleSpawner.SpawnDestructible;
                 upgraded = vehicleSpawner.SpawnUpgraded;
+                withSavedModifications = vehicleSpawner.SpawnWithSavedMods;
             }
 
             await SpawnVehicle(
@@ -1368,7 +1370,8 @@ namespace vMenuClient
                 vehicleInfo: LastVehicleInfo ?? new VehicleInfo(),
                 saveName: LastVehicleInfo.HasValue ? "." : "",
                 destructible: destructible,
-                upgraded: upgraded);
+                upgraded: upgraded,
+                withSavedModifications: withSavedModifications);
 
         }
         #endregion
@@ -1447,7 +1450,20 @@ namespace vMenuClient
         /// <param name="skipLoad">Does not attempt to load the vehicle, but will spawn it right a way.</param>
         /// <param name="vehicleInfo">All information needed for a saved vehicle to re-apply all mods.</param>
         /// <param name="saveName">Used to get/set info about the saved vehicle data.</param>
-        public static async Task<int> SpawnVehicle(uint vehicleHash, bool spawnInside, bool replacePrevious, bool skipLoad, VehicleInfo vehicleInfo, string saveName = null, float x = 0f, float y = 0f, float z = 0f, float heading = -1f, bool destructible = false, bool upgraded = false)
+        public static async Task<int> SpawnVehicle(
+            uint vehicleHash,
+            bool spawnInside,
+            bool replacePrevious,
+            bool skipLoad,
+            VehicleInfo vehicleInfo,
+            string saveName = null,
+            float x = 0f,
+            float y = 0f,
+            float z = 0f,
+            float heading = -1f,
+            bool destructible = false,
+            bool upgraded = false,
+            bool withSavedModifications = false)
         {
             int currentTime = Game.GameTime;
             if (currentTime - lastSpawnTime < GetSettingsInt(Setting.vmenu_vehicle_spawn_delay) && !IsAllowed(Permission.VSNoSpawnDelay))
@@ -1481,6 +1497,16 @@ namespace vMenuClient
             {
                 Notify.Error("You are not allowed to spawn this vehicle.");
                 return 0;
+            }
+
+            if (string.IsNullOrEmpty(saveName) && withSavedModifications && IsAllowed(Permission.VOSaveMods))
+            {
+                var maybeVehicleInfo = StorageManager.TryGetSavedVehicleInfo($"vehmods_{veh.Shortname}");
+                if (maybeVehicleInfo.HasValue)
+                {
+                    vehicleInfo = maybeVehicleInfo.Value;
+                    saveName = ".";
+                }
             }
 
             LastVehicleModel = vehicleHash;
@@ -1883,24 +1909,20 @@ namespace vMenuClient
         /// <summary>
         /// Saves the vehicle the player is currently in to the client's kvp storage and returns the save name
         /// </summary>
-        public static async Task<string> SaveVehicle(string updateExistingSavedVehicleName = null)
+        public static VehicleInfo GetVehicleInfo(Vehicle veh)
         {
-            var veh = GetVehicle();
             if (veh == null)
             {
-                Notify.Error(CommonErrors.NoVehicle, placeholderValue: "to save it");
-                return null;
+                throw new ArgumentNullException(nameof(veh));
             }
 
             if (!veh.Exists() ||
                 veh.IsDead ||
                 !veh.IsDriveable)
             {
-                Notify.Error("Your current vehicle cannot be saved.");
-                return null;
+                throw new InvalidOperationException();
             }
 
-            #region new saving method
             var mods = new Dictionary<int, int>();
 
             foreach (var mod in veh.Mods.GetAllMods())
@@ -1908,7 +1930,6 @@ namespace vMenuClient
                 mods.Add((int)mod.ModType, mod.Index);
             }
 
-            #region colors
             var colors = new Dictionary<string, int>();
 
 
@@ -1988,7 +2009,6 @@ namespace vMenuClient
             colors.Add("tyresmokeR", tyresmokeR);
             colors.Add("tyresmokeG", tyresmokeG);
             colors.Add("tyresmokeB", tyresmokeB);
-            #endregion
 
             var extras = new Dictionary<int, bool>();
             for (var i = 0; i < 20; i++)
@@ -1999,7 +2019,7 @@ namespace vMenuClient
                 }
             }
 
-            var vi = new VehicleInfo()
+            return new VehicleInfo()
             {
                 colors = colors,
                 customWheels = GetVehicleModVariation(veh.Handle, 23),
@@ -2024,8 +2044,35 @@ namespace vMenuClient
                 headlightColor = VehicleCustomization.GetHeadlightsColorForVehicle(veh),
                 enveffScale = GetVehicleEnveffScale(veh.Handle)
             };
+        }
 
-            #endregion
+        public static VehicleInfo? GetVehicleInfoNotifyOnError(Vehicle veh, string message)
+        {
+            try
+            {
+                return GetVehicleInfo(veh);
+            }
+            catch (ArgumentNullException)
+            {
+                Notify.Error(CommonErrors.NoVehicle, placeholderValue: message);
+            }
+            catch (InvalidOperationException)
+            {
+                Notify.Error($"The vehicle is in an invalid state to {message}");
+            }
+
+            return null;
+        }
+
+        public static async Task<string> SaveVehicle(string updateExistingSavedVehicleName = null)
+        {
+            VehicleInfo? maybeVi = GetVehicleInfoNotifyOnError(GetVehicle(), "save it");
+            if (!maybeVi.HasValue)
+            {
+                return null;
+            }
+
+            var vi = maybeVi.Value;
 
             if (updateExistingSavedVehicleName == null)
             {
@@ -2059,6 +2106,28 @@ namespace vMenuClient
                     ? updateExistingSavedVehicleName
                     : null;
             }
+        }
+
+        public static void SaveVehicleMods(Vehicle veh)
+        {
+            var maybeVi = GetVehicleInfoNotifyOnError(veh, "save its modifications");
+            if (!maybeVi.HasValue)
+            {
+                return;
+            }
+
+            var vi = maybeVi.Value;
+
+            var hash = (uint)veh.Model.Hash;
+            VehicleData.HashToVehicle.TryGetValue(hash, out var modelInfo);
+            if (modelInfo == null)
+            {
+                Notify.Error(CommonErrors.InvalidModel, placeholderValue: "The vehicle's modifications could not be saved.");
+                Debug.WriteLine("[ERROR] Shortname for vehicle {hash} not found.");
+                return;
+            }
+            StorageManager.SaveVehicleInfo($"vehmods_{modelInfo.Shortname}", vi, true);
+            Notify.Info("Vehicle modifications saved");
         }
         #endregion
 

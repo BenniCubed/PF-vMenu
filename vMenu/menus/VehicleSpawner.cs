@@ -82,6 +82,7 @@ namespace vMenuClient.menus
         public bool SpawnUpgraded { get; private set; } = IsAllowed(Permission.VOMod) ? UserDefaults.VehicleSpawnerSpawnUpgraded : false;
         public bool ReplaceVehicle { get; private set; } = UserDefaults.VehicleSpawnerReplacePrevious;
         public bool SpawnDestructible { get; private set; } = UserDefaults.VehicleSpawnerSpawnDestructible;
+        public bool SpawnWithSavedMods { get; private set; } = IsAllowed(Permission.VOSaveMods) ? UserDefaults.VehicleSpawnerSpawnWithSavedMods : false;
 
         private WMenuItem CreateSpawnVehicleButton(VehicleData.VehicleModelInfo vi)
         {
@@ -100,7 +101,8 @@ namespace vMenuClient.menus
                 vi.Shortname,
                 SpawnInVehicle,
                 ReplaceVehicle, destructible: SpawnDestructible,
-                upgraded: SpawnUpgraded);
+                upgraded: SpawnUpgraded,
+                withSavedModifications: SpawnWithSavedMods);
 
             return btn;
         }
@@ -367,7 +369,8 @@ namespace vMenuClient.menus
                 SpawnInVehicle,
                 ReplaceVehicle,
                 destructible: SpawnDestructible,
-                upgraded: SpawnUpgraded);
+                upgraded: SpawnUpgraded,
+                withSavedModifications: SpawnWithSavedMods);
         }
 
         private List<string> randomSportyVehiclesList;
@@ -384,7 +387,8 @@ namespace vMenuClient.menus
                 SpawnInVehicle,
                 ReplaceVehicle,
                 destructible: SpawnDestructible,
-                upgraded: SpawnUpgraded);
+                upgraded: SpawnUpgraded,
+                withSavedModifications: SpawnWithSavedMods);
         }
 
 
@@ -439,7 +443,13 @@ namespace vMenuClient.menus
             if (IsAllowed(Permission.VSSpawnByName))
             {
                 var spawnVehicleByName = new MenuItem("Spawn Vehicle By Model Name", "Spawn a vehicle by its exact model name.").ToWrapped();
-                spawnVehicleByName.Selected += async (_s, _args) => await SpawnVehicle("custom", SpawnInVehicle, ReplaceVehicle, SpawnDestructible);
+                spawnVehicleByName.Selected += async (_s, _args) => await SpawnVehicle(
+                    "custom",
+                    SpawnInVehicle,
+                    ReplaceVehicle,
+                    SpawnDestructible,
+                    SpawnUpgraded,
+                    SpawnWithSavedMods);
 
                 menu.AddItem(spawnVehicleByName);
             }
@@ -497,16 +507,21 @@ namespace vMenuClient.menus
                 var spawnOptionsMenu = new Menu(MenuTitle, "Spawn Options");
                 var spawnOptionsBtn = new MenuItem("Spawn Options", "Change vehicle spawn options.");
 
-                var spawnInVeh = new MenuCheckboxItem("Spawn Inside Vehicle", "This will teleport you into the vehicle when you spawn it.", SpawnInVehicle);
-                var replacePrev = new MenuCheckboxItem("Replace Previous Vehicle", "This will automatically delete your previously spawned vehicle when you spawn a new vehicle.", ReplaceVehicle);
-                var spawnUpgraded = new MenuCheckboxItem("Spawn Upgraded Vehicle", "This will spawn the vehicle with performance upgrades applied.", SpawnUpgraded);
-                var spawnDestructible = new MenuCheckboxItem("Spawn Traffic-Style Vehicle", "This will make it so the spawned vehicle can despawn when too far away and explode on impact.", SpawnDestructible);
+                var spawnInVeh = new MenuCheckboxItem("Spawn Inside Vehicle", "If enabled, you will automatically spawn into the spawned vehicles.", SpawnInVehicle);
+                var replacePrev = new MenuCheckboxItem("Replace Previous Vehicle", "If enabled, the newly spawned vehicle will replace your old one.", ReplaceVehicle);
+                var spawnWithSavedMods = new MenuCheckboxItem("Spawn With Saved Mods", "If enabled and you have custom mods for the vehicle saved, they will be applied to the spawned vehicle.", SpawnWithSavedMods);
+                var spawnUpgraded = new MenuCheckboxItem("Spawn Upgraded Vehicle", "If enabled and you don't have custom mods for the vehicle, performance upgrades will be applied to the spawned vehicle.", SpawnUpgraded);
+                var spawnDestructible = new MenuCheckboxItem("Spawn Traffic-Style Vehicle", "If enabled, spawned vehicles can despawn when too far away and explode on impact.", SpawnDestructible);
 
-                spawnOptionsMenu.AddMenuItem(spawnInVeh);
+                if (IsAllowed(Permission.VOSaveMods))
+                {
+                    spawnOptionsMenu.AddMenuItem(spawnWithSavedMods);
+                }
                 if (IsAllowed(Permission.VOMod))
                 {
                     spawnOptionsMenu.AddMenuItem(spawnUpgraded);
                 }
+                spawnOptionsMenu.AddMenuItem(spawnInVeh);
                 if (IsAllowed(Permission.VSDisableReplacePrevious))
                 {
                     spawnOptionsMenu.AddMenuItem(replacePrev);
@@ -524,7 +539,7 @@ namespace vMenuClient.menus
                 {
                     if (item == spawnInVeh)
                     {
-                        SpawnInVehicle = _checked;
+                        UserDefaults.VehicleSpawnerSpawnInside = SpawnInVehicle = _checked;
                     }
                     else if (item == spawnUpgraded)
                     {
@@ -532,11 +547,15 @@ namespace vMenuClient.menus
                     }
                     else if (item == replacePrev)
                     {
-                        ReplaceVehicle = _checked;
+                        UserDefaults.VehicleSpawnerReplacePrevious = ReplaceVehicle = _checked;
                     }
                     else if (item == spawnDestructible)
                     {
-                        SpawnDestructible = _checked;
+                        UserDefaults.VehicleSpawnerSpawnDestructible = SpawnDestructible = _checked;
+                    }
+                    else if (item == spawnWithSavedMods)
+                    {
+                        UserDefaults.VehicleSpawnerSpawnWithSavedMods = SpawnWithSavedMods = _checked;
                     }
                 };
             }

@@ -193,6 +193,12 @@ namespace vMenuClient
             get { return GetSettingsBool("vehicleSpawnerSpawnUpgraded"); }
             set { SetSavedSettingsBool("vehicleSpawnerSpawnUpgraded", value); }
         }
+
+        public static bool VehicleSpawnerSpawnWithSavedMods
+        {
+            get { return GetSettingsBool("vehicleSpawnerSpawnWithSavedMods"); }
+            set { SetSavedSettingsBool("vehicleSpawnerSpawnWithSavedMods", value); }
+        }
         #endregion
 
         #region Weapon Options
@@ -401,6 +407,7 @@ namespace vMenuClient
                     "miscJoinQuitNotifications" or
                     "vehicleSpawnerSpawnInside" or
                     "vehicleSpawnerReplacePrevious" or
+                    "vehicleSpawnerSpawnWithSavedMods" or
                     "neverWanted" or
                     "autoEquipParachuteWhenInPlane" or
                     "miscRestorePlayerAppearance" or
@@ -634,6 +641,9 @@ namespace vMenuClient
 
                 VehicleSpawnerSpawnUpgraded = MainMenu.VehicleSpawnerMenu.SpawnUpgraded;
                 prefs.Add("vehicleSpawnerSpawnUpgraded", VehicleSpawnerSpawnUpgraded);
+
+                VehicleSpawnerSpawnWithSavedMods = MainMenu.VehicleSpawnerMenu.SpawnWithSavedMods;
+                prefs.Add("vehicleSpawnerSpawnWithSavedMods", VehicleSpawnerSpawnWithSavedMods);
 
                 VehicleSpawnerSpawnInside = MainMenu.VehicleSpawnerMenu.SpawnInVehicle;
                 prefs.Add("vehicleSpawnerSpawnInside", VehicleSpawnerSpawnInside);

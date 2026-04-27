@@ -119,7 +119,8 @@ namespace vMenuClient.menus
                             vehicleInfo: selectedVehicle.Item2,
                             saveName: selectedVehicle.Item1,
                             destructible: MainMenu.VehicleSpawnerMenu.SpawnDestructible,
-                            upgraded: false);
+                            upgraded: false,
+                            withSavedModifications: false);
                     }
                     else
                     {
@@ -131,7 +132,8 @@ namespace vMenuClient.menus
                             vehicleInfo: selectedVehicle.Item2,
                             saveName: selectedVehicle.Item1,
                             destructible: false,
-                            upgraded: false);
+                            upgraded: false,
+                            withSavedModifications: false);
                     }
                 };
             }

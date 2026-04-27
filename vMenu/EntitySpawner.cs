@@ -106,7 +106,20 @@ namespace vMenuClient
             }
             else if (IsModelAVehicle(model) && !spawnNetworked)
             {
-                handle = await CommonFunctions.SpawnVehicle(model, false, false, skipLoad: false, vehicleInfo: new CommonFunctions.VehicleInfo(), saveName: null, coords.X, coords.Y, coords.Z, Game.PlayerPed.Heading);
+                handle = await CommonFunctions.SpawnVehicle(
+                    model,
+                    false,
+                    false,
+                    skipLoad: false,
+                    vehicleInfo: new CommonFunctions.VehicleInfo(),
+                    saveName: null,
+                    coords.X,
+                    coords.Y,
+                    coords.Z,
+                    Game.PlayerPed.Heading,
+                    destructible: false,
+                    upgraded: false,
+                    withSavedModifications: false);
             }
             else
             {

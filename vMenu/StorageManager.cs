@@ -248,6 +248,19 @@ namespace vMenuClient
             //return vi;
         }
 
+        public static VehicleInfo? TryGetSavedVehicleInfo(string saveName)
+        {
+            try
+            {
+                return GetSavedVehicleInfo(saveName);
+            }
+            catch
+            {
+                // Ignore
+            }
+            return null;
+        }
+
         /// <summary>
         /// Save json data. Returns true if save was successfull.
         /// </summary>
