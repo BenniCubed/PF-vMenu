@@ -1501,7 +1501,7 @@ namespace vMenuClient
 
             if (string.IsNullOrEmpty(saveName) && withSavedModifications && IsAllowed(Permission.VOSaveMods))
             {
-                var maybeVehicleInfo = StorageManager.TryGetSavedVehicleInfo($"vehmods_{veh.Shortname}");
+                var maybeVehicleInfo = StorageManager.TryGetSavedVehicleMods(veh.Shortname);
                 if (maybeVehicleInfo.HasValue)
                 {
                     vehicleInfo = maybeVehicleInfo.Value;
@@ -2108,26 +2108,49 @@ namespace vMenuClient
             }
         }
 
-        public static void SaveVehicleMods(Vehicle veh)
+        public static string TryGetVehicleShortname(Vehicle veh)
         {
-            var maybeVi = GetVehicleInfoNotifyOnError(veh, "save its modifications");
-            if (!maybeVi.HasValue)
-            {
-                return;
-            }
-
-            var vi = maybeVi.Value;
-
             var hash = (uint)veh.Model.Hash;
             VehicleData.HashToVehicle.TryGetValue(hash, out var modelInfo);
             if (modelInfo == null)
             {
-                Notify.Error(CommonErrors.InvalidModel, placeholderValue: "The vehicle's modifications could not be saved.");
                 Debug.WriteLine("[ERROR] Shortname for vehicle {hash} not found.");
+                return null;
+            }
+
+            return modelInfo.Shortname;
+        }
+
+        public static void SaveVehicleMods(Vehicle veh)
+        {
+            var shortname = TryGetVehicleShortname(veh);
+            if (string.IsNullOrEmpty(shortname))
+            {
+                Notify.Error(CommonErrors.InvalidModel, placeholderValue: "The vehicle's modifications could not be saved.");
                 return;
             }
-            StorageManager.SaveVehicleInfo($"vehmods_{modelInfo.Shortname}", vi, true);
+
+            var vi = GetVehicleInfoNotifyOnError(veh, "save its modifications");
+            if (!vi.HasValue)
+            {
+                return;
+            }
+
+            StorageManager.SaveVehicleMods(shortname, vi.Value);
             Notify.Info("Vehicle modifications saved");
+        }
+
+        public static void DeleteSavedVehicleMods(Vehicle veh)
+        {
+            var shortname = TryGetVehicleShortname(veh);
+            if (string.IsNullOrEmpty(shortname))
+            {
+                Notify.Error(CommonErrors.InvalidModel, placeholderValue: "The vehicle's modifications could not be deleted.");
+                return;
+            }
+
+            StorageManager.DeleteSavedVehicleMods(shortname);
+            Notify.Info("Vehicle modifications deleted");
         }
         #endregion
 

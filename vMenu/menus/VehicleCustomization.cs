@@ -172,10 +172,16 @@ namespace vMenuClient.menus
                 }
             }
 
-            var saveModifications = WMenuItem.CreateConfirmationButton("Save Modifications", "Save your vehicle's modifications. They will be applied when you spawn the vehicle again.");
+            var saveModifications = WMenuItem.CreateConfirmationButton("Save Modifications As Default", "Save your vehicle's modifications as the model's default. They will be applied when you spawn the model again. ~y~This will override any existing saved default modifications!~s~");
             saveModifications.Confirmed += (o, e) =>
             {
                 SaveVehicleMods(GetVehicle());
+            };
+
+            var deleteModifications = WMenuItem.CreateConfirmationButton("~r~Delete Default Modifications~s~", "Delete the saved default modifications for your vehicle's model. ~y~This cannot be undone!~s~");
+            deleteModifications.Confirmed += (o, e) =>
+            {
+                DeleteSavedVehicleMods(GetVehicle());
             };
 
             var licensePlates = new List<string> { plate01, plate02, plate03, plate04, plate05, plate06 };
@@ -242,6 +248,7 @@ namespace vMenuClient.menus
             if (IsAllowed(Permission.VOSaveMods))
             {
                 menu.AddMenuItem(saveModifications.MenuItem);
+                menu.AddMenuItem(deleteModifications.MenuItem);
             }
             #endregion
 
@@ -276,6 +283,14 @@ namespace vMenuClient.menus
                             {
                                 ItemIndex = index,
                                 Item = saveModifications.MenuItem,
+                            });
+                        }
+                        else if (item == deleteModifications.MenuItem)
+                        {
+                            deleteModifications.OnSelected(new WMenuItem.SelectedEventArgs
+                            {
+                                ItemIndex = index,
+                                Item = deleteModifications.MenuItem,
                             });
                         }
                     }

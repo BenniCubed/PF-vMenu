@@ -101,6 +101,46 @@ namespace vMenuClient
             TriggerEvent("vMenu:GetUsersettingResponse", response);
         }
 
+        [EventHandler("vMenu:GetSavedVehicleMods")]
+        public void GetSavedVehicleMods(string shortname)
+        {
+            var maybeVi = StorageManager.TryGetSavedVehicleMods(shortname);
+            object viEventData = null;
+            if (maybeVi.HasValue)
+            {
+                var vi = maybeVi.Value;
+
+                // Create this object of anon class because otherwise sending it via the event does not work properly
+                viEventData = new
+                {
+                    vi.colors,
+                    vi.customWheels,
+                    vi.extras,
+                    vi.livery,
+                    vi.model,
+                    vi.mods,
+                    vi.name,
+                    vi.neonBack,
+                    vi.neonFront,
+                    vi.neonLeft,
+                    vi.neonRight,
+                    vi.plateText,
+                    vi.plateStyle,
+                    vi.turbo,
+                    vi.tyreSmoke,
+                    vi.version,
+                    vi.wheelType,
+                    vi.windowTint,
+                    vi.xenonHeadlights,
+                    vi.bulletProofTires,
+                    vi.headlightColor,
+                    vi.enveffScale,
+                };
+            }
+
+            TriggerEvent("vMenu:GetSavedVehicleModsResponse", viEventData);
+        }
+
         [Tick]
         public async Task SyncUsersettings()
         {

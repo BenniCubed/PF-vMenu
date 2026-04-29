@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Compression;
 using System.Linq;
 
 using CitizenFX.Core;
@@ -11,6 +12,7 @@ using vMenuClient.MenuAPIWrapper;
 
 using static vMenuClient.CommonFunctions;
 using static vMenuShared.ConfigManager;
+using static vMenuShared.PermissionsManager;
 
 namespace vMenuClient.menus
 {
@@ -23,7 +25,7 @@ namespace vMenuClient.menus
         private WMenu manageUnavailableVehicleMenu = new WMenu(MenuTitle, "CHANGE ME");
 
 
-        private Tuple<string, VehicleInfo> selectedVehicle;
+        private Tuple<string, VehicleInfo, VehicleData.VehicleModelInfo> selectedVehicle;
 
         private struct SavedVehiclesMenuData
         {
@@ -79,14 +81,12 @@ namespace vMenuClient.menus
 
             availableSavedVehiclesMenuData.Menu.Menu.FilterMenuItems(mi =>
             {
-                if (mi.ItemData is Tuple<string, VehicleData.VehicleModelInfo> t)
+                if (mi.ItemData is Tuple<string, VehicleData.VehicleModelInfo> itemData)
                 {
-                    return filter.IsMatching(t.Item2, t.Item1);
+                    return filter.IsMatching(itemData.Item2, itemData.Item1);
                 }
-                else
-                {
-                    return true;
-                }
+
+                return true;
             });
             var countFiltered = availableSavedVehiclesMenuData.Menu.Menu.Size;
 
@@ -152,7 +152,10 @@ namespace vMenuClient.menus
                     {
                         KeyValueStore.Remove($"veh_{selectedVehicle.Item1}");
 
-                        selectedVehicle = new Tuple<string, VehicleInfo>(newName, selectedVehicle.Item2);
+                        selectedVehicle = new Tuple<string, VehicleInfo, VehicleData.VehicleModelInfo>(
+                            newName,
+                            selectedVehicle.Item2,
+                            selectedVehicle.Item3);
                         manageMenu.Menu.MenuSubtitle = newName;
 
                         RecreateVehicleMenus();
@@ -182,7 +185,7 @@ namespace vMenuClient.menus
                 }
             };
 
-            var deleteVehicle = WMenuItem.CreateConfirmationButton("~r~Delete Vehicle~s~", "This will delete the saved vehicle. ~y~This cannot be undone!~s~");
+            var deleteVehicle = WMenuItem.CreateConfirmationButton("~r~Delete Vehicle~s~", "Delete the saved vehicle. ~y~This cannot be undone!~s~");
             deleteVehicle.Confirmed += (_s, _args) =>
             {
                 KeyValueStore.Remove($"veh_{selectedVehicle.Item1}");
@@ -193,7 +196,17 @@ namespace vMenuClient.menus
                 Notify.Success("The saved vehicle has been deleted.");
             };
 
-            manageMenu.AddItems([spawnVehicle, renameVehicle, replaceVehicle, deleteVehicle]);
+            WMenuItem saveAsDefaultMod = null;
+            if (available && IsAllowed(Permission.VOSaveMods))
+            {
+                saveAsDefaultMod = WMenuItem.CreateConfirmationButton("Save Modifications As Default", "Save this saved vehicle's modifications as its model's default. They will be applied when you spawn the model through the ~b~Spawn Vehicles~s~ menu again. ~y~This will override any existing saved default modifications!~s~");
+                saveAsDefaultMod.Confirmed += (_s, _args) =>
+                {
+                    StorageManager.SaveVehicleMods(selectedVehicle.Item3.Shortname, selectedVehicle.Item2);
+                };
+            }
+
+            manageMenu.AddItems([spawnVehicle, renameVehicle, replaceVehicle, deleteVehicle, saveAsDefaultMod]);
 
             manageMenu.Closed += (_s, _args) =>
             {
@@ -203,7 +216,7 @@ namespace vMenuClient.menus
             return manageMenu;
         }
 
-        private WMenuItem CreateAvailableVehicleButton(string name, VehicleInfo info)
+        private WMenuItem CreateAvailableVehicleButton(string name, VehicleInfo info, VehicleData.VehicleModelInfo vmi)
         {
             var vi = VehicleData.HashToVehicle[info.model];
 
@@ -235,7 +248,7 @@ namespace vMenuClient.menus
             }.ToWrapped();
             btn.Selected += (_s, _args) =>
             {
-                selectedVehicle = new Tuple<string, VehicleInfo>(name, info);
+                selectedVehicle = new Tuple<string, VehicleInfo, VehicleData.VehicleModelInfo>(name, info, vmi);
                 manageAvailableVehicleMenu.Menu.MenuSubtitle = name;
             };
 
@@ -250,7 +263,7 @@ namespace vMenuClient.menus
             }.ToWrapped();
             btn.Selected += (_s, _args) =>
             {
-                selectedVehicle = new Tuple<string, VehicleInfo>(name, info);
+                selectedVehicle = new Tuple<string, VehicleInfo, VehicleData.VehicleModelInfo>(name, info, null);
                 manageUnavailableVehicleMenu.Menu.MenuSubtitle = name;
             };
 
@@ -379,10 +392,10 @@ namespace vMenuClient.menus
 
                 var defaultClassesOptions = Enumerable.Concat(["~italic~All~italic~"], defaultClasses).ToList();
                 var defaultClassesFilter = new MenuListItem(
-                    $"~b~Filter By {(customClasses.Count == 0 ? "" : "Default ")}Class~s~",
+                    $"~b~Filter By {(customClasses.Count == 0 ? "" : "Rockstar ")}Class~s~",
                     defaultClassesOptions,
                     0,
-                    "Filter vehicles by default class. Click to reset the filter.").ToWrapped();
+                    "Filter vehicles by Rockstar class. Click to reset the filter.").ToWrapped();
                 defaultClassesFilter.ListChanged += (_s, args) =>
                 {
                     if (args.ListIndexNew == 0)
@@ -464,7 +477,7 @@ namespace vMenuClient.menus
             return menuData;
         }
 
-        private void PopulateVehiclesMenu(SavedVehiclesMenuData menuData, List<Tuple<string, VehicleInfo>> vehicles, bool available)
+        private void PopulateVehiclesMenu(SavedVehiclesMenuData menuData, List<Tuple<string, VehicleInfo, VehicleData.VehicleModelInfo>> vehicles, bool available)
         {
             foreach (var btn in menuData.VehicleButtons)
             {
@@ -474,20 +487,18 @@ namespace vMenuClient.menus
 
             foreach (var vehicle in vehicles)
             {
+                var name = vehicle.Item1;
+                var vi = vehicle.Item2;
+                var vmi = vehicle.Item3;
+
                 var btn = available
-                    ? CreateAvailableVehicleButton(vehicle.Item1, vehicle.Item2)
-                    : CreateUnavailableVehicleButton(vehicle.Item1, vehicle.Item2);
+                    ? CreateAvailableVehicleButton(name, vi, vmi)
+                    : CreateUnavailableVehicleButton(name, vi);
                 menuData.Menu.BindSubmenu(manageAvailableVehicleMenu, btn, addLabel: false);
                 menuData.Menu.AddItem(btn);
                 menuData.VehicleButtons.Add(btn);
 
-                VehicleData.VehicleModelInfo modelInfo;
-                if (!VehicleData.HashToVehicle.TryGetValue(vehicle.Item2.model, out modelInfo))
-                {
-                    modelInfo = new VehicleData.VehicleModelInfo("");
-                }
-
-                btn.ItemData = new Tuple<string, VehicleData.VehicleModelInfo>(vehicle.Item1, modelInfo);
+                btn.ItemData = new Tuple<string, VehicleData.VehicleModelInfo>(name, vmi);
             }
         }
 
@@ -495,31 +506,28 @@ namespace vMenuClient.menus
         private void RecreateVehicleMenus()
         {
             var savedVehicles = GetSavedVehicles()
-                .Select(kv => new Tuple<string, VehicleInfo>(kv.Key.Substring(4), kv.Value))
+                .Select(kv =>
+                {
+                    var name = kv.Key.Substring(4);
+                    var vi = kv.Value;
+                    VehicleData.HashToVehicle.TryGetValue(vi.model, out var vmi);
+                    return new Tuple<string, VehicleInfo, VehicleData.VehicleModelInfo>(name, vi, vmi);
+                })
                 .OrderBy(kv => kv.Item1, Comparer<string>.Create(VehicleData.CompareVehicleNames));
 
+            var isAllowed = (VehicleData.VehicleModelInfo vmi) =>
+            {
+                return vmi != null && vmi.IsAllowed;
+            };
+
             var availableSavedVehicles = savedVehicles
-                .Where(t =>
-                {
-                    if (VehicleData.HashToVehicle.TryGetValue(t.Item2.model, out var vi))
-                    {
-                        return vi.IsAllowed;
-                    }
-                    return false;
-                })
+                .Where(t => isAllowed(t.Item3))
                 .ToList();
             PopulateVehiclesMenu(availableSavedVehiclesMenuData, availableSavedVehicles, true);
             FilterAvailableSavedVehiclesMenu();
 
             var unavailableSavedVehicles = savedVehicles
-                .Where(t =>
-                {
-                    if (VehicleData.HashToVehicle.TryGetValue(t.Item2.model, out var vi))
-                    {
-                        return !vi.IsAllowed;
-                    }
-                    return true;
-                })
+                .Where(t => !isAllowed(t.Item3))
                 .ToList();
             PopulateVehiclesMenu(unavailableSavedVehiclesMenuData, unavailableSavedVehicles, false);
         }

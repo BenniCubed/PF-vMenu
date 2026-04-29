@@ -129,6 +129,9 @@ namespace vMenuClient
             return false;
         }
 
+        public static bool SaveVehicleMods(string shortname, VehicleInfo vehicleInfo) =>
+            SaveVehicleInfo($"vehmods_{shortname}", vehicleInfo, true);
+
         /// <summary>
         /// New function to get vehicle information from a saved vehicle.
         /// </summary>
@@ -260,6 +263,12 @@ namespace vMenuClient
             }
             return null;
         }
+
+        public static VehicleInfo? TryGetSavedVehicleMods(string shortname) =>
+            TryGetSavedVehicleInfo($"vehmods_{shortname}");
+
+        public static void DeleteSavedVehicleMods(string shortname) =>
+            KeyValueStore.Remove($"vehmods_{shortname}");
 
         /// <summary>
         /// Save json data. Returns true if save was successfull.
