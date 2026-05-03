@@ -459,6 +459,13 @@ namespace vMenuServer
 
                 public static Task<string> GetInfoResult { get; set; }
             }
+
+            public static class PlayerPermissions
+            {
+                private const string HOOKS_PREFIX = HOOKS_PREFIX_ + "PlayerPermissions:";
+
+                public const string FETCH_FOR_EVENT_NAME = HOOKS_PREFIX + "fetchFor";
+            }
         }
         #endregion
 

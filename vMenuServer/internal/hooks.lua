@@ -82,3 +82,4 @@ end
 
 addHookHandlers("VehicleInfo", { "fetch" })                               -- vehicleInfo.lua
 addHookHandlers("Usersettings", { "getInfo", "fetchAllFor", "storeFor" }) -- usersettings.lua
+addHookHandlers("PlayerPermissions", { "fetchFor" })                      -- playerPermissions.lua
