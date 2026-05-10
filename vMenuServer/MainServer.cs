@@ -518,7 +518,7 @@ namespace vMenuServer
         {
             if (source != null)
             {
-                if (vMenuShared.PermissionsManager.GetPermissionAndParentPermissions(vMenuShared.PermissionsManager.Permission.PVKickPassengers).Any(perm => vMenuShared.PermissionsManager.IsAllowed(perm, source)))
+                if (PermissionsManager.IsAllowed(PermissionsManager.Permission.PVKickPassengers, source))
                 {
                     TriggerClientEvent("vMenu:GetOutOfCar", vehicleNetId, playerOwner);
                     source.TriggerEvent("vMenu:Notify", "All passengers will be kicked out as soon as the vehicle stops moving, or after 10 seconds if they refuse to stop the vehicle.", "info");

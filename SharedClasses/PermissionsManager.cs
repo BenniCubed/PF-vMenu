@@ -14,6 +14,8 @@ namespace vMenuShared
 {
     public static class PermissionsManager
     {
+        public const string VMENU_ACE_PREFIX = "vMenu";
+
         public enum Permission
         {
             // Permission debugging
@@ -403,258 +405,37 @@ namespace vMenuShared
             // ResetIndex Permission
             ResetIndex,
             #endregion
-
-
         }
-        public static Dictionary<Permission, bool> Permissions { get; private set; } = new Dictionary<Permission, bool>();
-        public static bool ArePermissionsSetup { get; set; } = false;
 
-
-#if SERVER
-        /// <summary>
-        /// Public function to check if a permission is allowed.
-        /// </summary>
-        /// <param name="permission"></param>
-        /// <param name="source"></param>
-        /// <param name="checkAnyway">if true, then the permissions will be checked even if they aren't setup yet.</param>
-        /// <returns></returns>
-        public static bool IsAllowed(Permission permission, Player source) => IsAllowedServer(permission, source);
-#endif
-
-#if CLIENT
-        /// <summary>
-        /// Public function to check if a permission is allowed.
-        /// </summary>
-        /// <param name="permission"></param>
-        /// <param name="checkAnyway">if true, then the permissions will be checked even if they aren't setup yet.</param>
-        /// <returns></returns>
-        public static bool IsAllowed(Permission permission, bool checkAnyway = false) => IsAllowedClient(permission, checkAnyway);
-
-        private static readonly Dictionary<Permission, bool> allowedPerms = new();
-        /// <summary>
-        /// Private function that handles client side permission requests.
-        /// </summary>
-        /// <param name="permission"></param>
-        /// <returns></returns>
-        private static bool IsAllowedClient(Permission permission, bool checkAnyway)
+        private static HashSet<Permission> GetParentPermissions(Permission permission)
         {
-            if (ArePermissionsSetup || checkAnyway)
+            var parentPermissions = new HashSet<Permission>() { Permission.Everything, permission };
+            var permStr = permission.ToString();
+
+            var permStr2 = permStr.Substring(0, 2);
+
+            // if the first 2 characters are both uppercase
+            if (permStr2.ToUpper() == permStr2 &&
+                (permStr.Substring(2) is not ("All" or "Menu" or "VehiclesBlacklist" or "DisableFromDefaultList" or "AllowOpenWheel")))
             {
-                var staffPermissionAllowed = (
-                    Permissions.ContainsKey(Permission.Staff) && Permissions[Permission.Staff]
-                ) || (
-                    Permissions.ContainsKey(Permission.Everything) && Permissions[Permission.Everything]
-                );
-                // Return false immediately if the staff only convar is set and the user is not a staff member.
-                if (ConfigManager.GetSettingsBool(ConfigManager.Setting.vmenu_menu_staff_only) && !staffPermissionAllowed)
+                var allPerms = Enum
+                    .GetValues(typeof(Permission))
+                    .Cast<Permission>()
+                    .Where(p => p.ToString() == permStr2 + "All");
+                foreach (var p in allPerms)
                 {
-                    return false;
-                }
-
-                if (allowedPerms.ContainsKey(permission) && allowedPerms[permission])
-                {
-                    return true;
-                }
-                else if (!allowedPerms.ContainsKey(permission))
-                {
-                    allowedPerms[permission] = false;
-                }
-
-                // Get a list of all permissions that are (parents) of the current permission, including the current permission.
-                var permissionsToCheck = GetPermissionAndParentPermissions(permission);
-
-                // Check if any of those permissions is allowed, if so, return true.
-                if (permissionsToCheck.Any(p => Permissions.ContainsKey(p) && Permissions[p]))
-                {
-                    allowedPerms[permission] = true;
-                    return true;
+                    parentPermissions.Add(p);
                 }
             }
-            return false;
-        }
-#endif
-#if SERVER
-        /// <summary>
-        /// Checks if the player is allowed that specific permission.
-        /// </summary>
-        /// <param name="permission"></param>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        private static bool IsAllowedServer(Permission permission, Player source)
-        {
-            if (source == null)
-            {
-                return false;
-            }
-
-            if (IsPlayerAceAllowed(source.Handle, GetAceName(permission)))
-            {
-                return true;
-            }
-            return false;
-        }
-#endif
-
-        private static readonly Dictionary<Permission, List<Permission>> parentPermissions = new();
-
-        /// <summary>
-        /// Gets the current permission and all parent permissions.
-        /// </summary>
-        /// <param name="permission"></param>
-        /// <returns></returns>
-        public static List<Permission> GetPermissionAndParentPermissions(Permission permission)
-        {
-            if (parentPermissions.ContainsKey(permission))
-            {
-                return parentPermissions[permission];
-            }
-            else
-            {
-                var list = new List<Permission>() { Permission.Everything, permission };
-                var permStr = permission.ToString();
-
-                // if the first 2 characters are both uppercase
-                if (permStr.Substring(0, 2).ToUpper() == permStr.Substring(0, 2))
-                {
-                    if (permStr.Substring(2) is not ("All" or "Menu" or "VehiclesBlacklist" or "DisableFromDefaultList" or "AllowOpenWheel"))
-                    {
-                        list.AddRange(Enum.GetValues(typeof(Permission)).Cast<Permission>().Where(a => a.ToString() == permStr.Substring(0, 2) + "All"));
-                    }
-                }
-                //else // it's one of the .Everything, .DontKickMe, DontBanMe, NoClip, Staff, etc perms that are not menu specific.
-                //{
-                //    // do nothing
-                //}
-                parentPermissions[permission] = list;
-                return list;
-            }
+            // else it's one of the .Everything, .DontKickMe, DontBanMe, NoClip, Staff, etc perms that are not menu specific so do nothing
+            return parentPermissions;
         }
 
-#if SERVER
-        /// <summary>
-        /// Sets the permissions for a specific player (checks server side, sends event to client side).
-        /// </summary>
-        /// <param name="player"></param>
-        public async static void SetPermissionsForPlayer([FromSource] Player player)
-        {
-            if (player == null)
-            {
-                return;
-            }
+        public static readonly Dictionary<Permission, HashSet<Permission>> ParentPermissions = Enum
+            .GetValues(typeof(Permission))
+            .Cast<Permission>()
+            .ToDictionary(p => p, GetParentPermissions);
 
-            if (GetSettingsBool(Setting.vmenu_debug_permissions))
-            {
-                var identifiers = player.Identifiers;
-                var isAdmin = IsAllowed(Permission.AceDebugPermissionsIsAdmin, player);
-                var isMod = IsAllowed(Permission.AceDebugPermissionsIsModerator, player);
-                Debug.WriteLine(
-                    $"Sending permissions to {player.Name} with IDs " +
-                    $"fivem:{identifiers["fivem"] ?? "NULL"}, " +
-                    $"license:{identifiers["license"] ?? "NULL"}, " +
-                    $"and roles " +
-                    $"admin={isAdmin}, moderator={isMod}");
-            }
-
-            var perms = new Dictionary<Permission, bool>();
-
-            // If enabled in the permissions.cfg (disabled by default) then this will give me (only me) the option to trigger some debug commands and
-            // try out menu options. This only works if I'm in-game on your server, and you have enabled server debugging mode, this way I will never
-            // be able to do something without you actually allowing it.
-            if (player.Identifiers.ToList().Any(id => id == "4510587c13e0b645eb8d24bc104601792277ab98") && IsPlayerAceAllowed(player.Handle, "vMenu.Dev") && ConfigManager.DebugMode)
-            {
-                perms.Add(Permission.Everything, true);
-            }
-
-            if (!ConfigManager.GetSettingsBool(ConfigManager.Setting.vmenu_use_permissions))
-            {
-                foreach (var p in Enum.GetValues(typeof(Permission)))
-                {
-                    var permission = (Permission)p;
-                    switch (permission)
-                    {
-                        // don't allow any of the following permissions if perms are ignored.
-                        case Permission.Everything:
-                        case Permission.OPAll:
-                        case Permission.OPKick:
-                        case Permission.OPKill:
-                        case Permission.OPPermBan:
-                        case Permission.OPTempBan:
-                        case Permission.OPUnban:
-                        case Permission.OPIdentifiers:
-                        case Permission.OPViewBannedPlayers:
-                            break;
-                        // do allow the rest
-                        default:
-                            perms.Add(permission, true);
-                            break;
-                    }
-                }
-            }
-            else
-            {
-                // Loop through all permissions and check if they're allowed.
-                foreach (var p in Enum.GetValues(typeof(Permission)))
-                {
-                    var permission = (Permission)p;
-                    if (!perms.ContainsKey(permission))
-                    {
-                        perms.Add(permission, IsAllowed(permission, player)); // triggers IsAllowedServer
-                    }
-                }
-            }
-
-            // Send the permissions to the client.
-            player.TriggerEvent("vMenu:SetPermissions", Newtonsoft.Json.JsonConvert.SerializeObject(perms));
-
-            // Also tell the client to do the addons setup.
-            player.TriggerEvent("vMenu:SetAddons");
-
-            var usersettings = await vMenuServer.RequestManager.Send(
-                vMenuServer.MainServer.Hooks.Usersettings.FETCH_ALL_FOR_EVENT_NAME,
-                $"{player.Handle}");
-
-            Dictionary<string, string> extras = new Dictionary<string, string>
-            {
-                ["vehicleInfo"] = await vMenuServer.MainServer.Hooks.VehicleInfo.FetchResult,
-                ["usersettingsInfo"] = await vMenuServer.MainServer.Hooks.Usersettings.GetInfoResult,
-                ["usersettings"] = usersettings,
-            };
-            player.TriggerEvent("vMenu:SetExtras", JsonConvert.SerializeObject(extras));
-        }
-#endif
-#if CLIENT
-        /// <summary>
-        /// Sets the permission (client side event handler).
-        /// </summary>
-        /// <param name="permissions"></param>
-        public static void SetPermissions(string permissions)
-        {
-            Permissions = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<Permission, bool>>(permissions);
-            // if debug logging.
-            if (GetResourceMetadata(GetCurrentResourceName(), "client_debug_mode", 0) == "true")
-            {
-                Debug.WriteLine("[vMenu] [Permissions] " + Newtonsoft.Json.JsonConvert.SerializeObject(Permissions, Newtonsoft.Json.Formatting.None));
-            }
-
-            ArePermissionsSetup = true;
-
-            if (GetSettingsBool(Setting.vmenu_debug_permissions))
-            {
-                var roles = new List<string> { };
-                if (IsAllowed(Permission.AceDebugPermissionsIsAdmin))
-                {
-                    roles.Add("admin");
-                }
-                if (IsAllowed(Permission.AceDebugPermissionsIsModerator))
-                {
-                    roles.Add("moderator");
-                }
-
-                Debug.WriteLine("[INFO] Your roles: {" + string.Join(",", roles) + "}");
-            }
-        }
-#endif
-#if SERVER
         /// <summary>
         /// Gets the full permission ace name for the specific <see cref="Permission"/> enum.
         /// </summary>
@@ -664,7 +445,7 @@ namespace vMenuShared
         {
             var name = permission.ToString();
 
-            var prefix = "vMenu.";
+            var prefix = $"{VMENU_ACE_PREFIX}.";
 
             switch (name.Substring(0, 2))
             {
@@ -727,6 +508,193 @@ namespace vMenuShared
             }
 
             return prefix + "." + name.Substring(2);
+        }
+
+        public static readonly Dictionary<Permission, string> PermissionToAceName = Enum
+            .GetValues(typeof(Permission))
+            .Cast<Permission>()
+            .ToDictionary(p => p, GetAceName);
+
+        public static readonly Dictionary<string, Permission> AceNameToPermission = PermissionToAceName
+            .ToDictionary(kv => kv.Value, kv => kv.Key);
+
+#if SERVER
+        /// <summary>
+        /// Checks if the player is allowed that specific permission.
+        /// </summary>
+        /// <param name="permission"></param>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static bool IsAllowed(Permission permission, Player source)
+        {
+            if (source == null)
+            {
+                return false;
+            }
+
+            return ParentPermissions[permission]
+                .Any(pperm => IsPlayerAceAllowed(source.Handle, PermissionToAceName[pperm]));
+        }
+
+        /// <summary>
+        /// Sets the permissions for a specific player (checks server side, sends event to client side).
+        /// </summary>
+        /// <param name="player"></param>
+        public async static void SetPermissionsForPlayer([FromSource] Player player)
+        {
+            if (player == null)
+            {
+                return;
+            }
+
+            if (GetSettingsBool(Setting.vmenu_debug_permissions))
+            {
+                var identifiers = player.Identifiers;
+                var isAdmin = IsAllowed(Permission.AceDebugPermissionsIsAdmin, player);
+                var isMod = IsAllowed(Permission.AceDebugPermissionsIsModerator, player);
+                Debug.WriteLine(
+                    $"Sending permissions to {player.Name} with IDs " +
+                    $"fivem:{identifiers["fivem"] ?? "NULL"}, " +
+                    $"license:{identifiers["license"] ?? "NULL"}, " +
+                    $"and roles " +
+                    $"admin={isAdmin}, moderator={isMod}");
+            }
+
+            var allowedBuiltinPermissions = new HashSet<Permission>();
+
+            if (!GetSettingsBool(Setting.vmenu_use_permissions))
+            {
+                foreach (var p in Enum.GetValues(typeof(Permission)))
+                {
+                    var permission = (Permission)p;
+                    switch (permission)
+                    {
+                        // don't allow any of the following permissions if perms are ignored.
+                        case Permission.Everything:
+                        case Permission.OPAll:
+                        case Permission.OPKick:
+                        case Permission.OPKill:
+                        case Permission.OPPermBan:
+                        case Permission.OPTempBan:
+                        case Permission.OPUnban:
+                        case Permission.OPIdentifiers:
+                        case Permission.OPViewBannedPlayers:
+                            break;
+                        // do allow the rest
+                        default:
+                            allowedBuiltinPermissions.Add(permission);
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                allowedBuiltinPermissions = [.. Enum
+                    .GetValues(typeof(Permission))
+                    .Cast<Permission>()
+                    .Where(p => IsAllowed(p, player))];
+            }
+
+            var playerPermissionsJson = await vMenuServer.RequestManager.Send(
+                vMenuServer.MainServer.Hooks.PlayerPermissions.FETCH_FOR_EVENT_NAME,
+                $"{player.Handle}");
+            var playerPermissions = JsonConvert.DeserializeObject<Dictionary<string, bool>>(playerPermissionsJson);
+
+            var filteredPlayerPermissions = (bool allowed) =>
+            {
+                return playerPermissions
+                    .Where(kv => kv.Value == allowed)
+                    .Select(kv => kv.Key);
+            };
+
+            var allowedPlayerPermissions = filteredPlayerPermissions(true);
+            var deniedPlayerPermissions = filteredPlayerPermissions(false);
+
+            var allowedPermissions = allowedBuiltinPermissions
+                .Select(p => PermissionToAceName[p])
+                .Union(allowedPlayerPermissions)
+                .Where(p => !deniedPlayerPermissions.Contains(p))
+                .ToList();
+
+            if (GetSettingsBool(Setting.vmenu_menu_staff_only) &&
+                !new[] { Permission.Staff, Permission.Everything }.Any(p => IsAllowed(p, player)))
+            {
+                allowedPermissions = new();
+            }
+
+            // Send the permissions to the client.
+            player.TriggerEvent("vMenu:SetPermissions", JsonConvert.SerializeObject(allowedPermissions));
+
+            // Also tell the client to do the addons setup.
+            player.TriggerEvent("vMenu:SetAddons");
+
+            var usersettings = await vMenuServer.RequestManager.Send(
+                vMenuServer.MainServer.Hooks.Usersettings.FETCH_ALL_FOR_EVENT_NAME,
+                $"{player.Handle}");
+
+            Dictionary<string, string> extras = new Dictionary<string, string>
+            {
+                ["vehicleInfo"] = await vMenuServer.MainServer.Hooks.VehicleInfo.FetchResult,
+                ["usersettingsInfo"] = await vMenuServer.MainServer.Hooks.Usersettings.GetInfoResult,
+                ["usersettings"] = usersettings,
+            };
+            player.TriggerEvent("vMenu:SetExtras", JsonConvert.SerializeObject(extras));
+        }
+#endif
+
+#if CLIENT
+        public static HashSet<string> Permissions { get; private set; } = new();
+        public static bool ArePermissionsSetup { get; set; } = false;
+
+        /// <summary>
+        /// Public function to check if a permission is allowed.
+        /// </summary>
+        /// <param name="permission"></param>
+        /// <param name="checkAnyway">If true, the permissions will be checked even if they aren't setup yet.</param>
+        /// <returns></returns>
+        public static bool IsAllowed(Permission permission, bool checkAnyway = false) =>
+            IsAllowed(PermissionToAceName[permission], checkAnyway);
+
+        public static bool IsAllowed(string permission, bool checkAnyway = false)
+        {
+            if (!ArePermissionsSetup && !checkAnyway)
+            {
+                return false;
+            }
+
+            return Permissions.Contains(permission);
+        }
+
+        /// <summary>
+        /// Sets the permission (client side event handler).
+        /// </summary>
+        /// <param name="permissions"></param>
+        public static void SetPermissions(string permissionsJson)
+        {
+            Permissions = [.. Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(permissionsJson)];
+
+            // if debug logging.
+            if (GetResourceMetadata(GetCurrentResourceName(), "client_debug_mode", 0) == "true")
+            {
+                Debug.WriteLine("[vMenu] [Permissions] " + Newtonsoft.Json.JsonConvert.SerializeObject(Permissions, Newtonsoft.Json.Formatting.None));
+            }
+
+            ArePermissionsSetup = true;
+
+            if (GetSettingsBool(Setting.vmenu_debug_permissions))
+            {
+                var roles = new List<string> { };
+                if (IsAllowed(Permission.AceDebugPermissionsIsAdmin))
+                {
+                    roles.Add("admin");
+                }
+                if (IsAllowed(Permission.AceDebugPermissionsIsModerator))
+                {
+                    roles.Add("moderator");
+                }
+
+                Debug.WriteLine("[INFO] Your roles: {" + string.Join(",", roles) + "}");
+            }
         }
 #endif
     }
