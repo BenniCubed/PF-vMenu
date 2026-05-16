@@ -69,6 +69,7 @@
 --- @field key string               -- The key of the usersetting (for storage and update events)
 --- @field name string              -- The (display) name of the usersetting
 --- @field description string       -- The (display) description of the usersetting
+--- @field permission string        -- The permission (see playerPermissions.lua) the user needs to access this setting
 --- @field type UsersettingSpecType -- The type of the usersetting, determines the concrete spec below
 --- @field spec (UsersettingListSpec | UsersettingRangeSpec | UsersettingToggleSpec) -- Concrete usersetting spec, based
 ---                                                                                  -- on the type above

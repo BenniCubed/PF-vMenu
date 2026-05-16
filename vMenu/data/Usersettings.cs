@@ -203,6 +203,7 @@ namespace vMenuClient.data
             public string key;
             public string name;
             public string description = "";
+            public string permission = "";
 
             public string type;
             public JToken spec;

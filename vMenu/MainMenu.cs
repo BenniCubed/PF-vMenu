@@ -1,17 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Threading.Tasks;
 
 using CitizenFX.Core;
-
-using Freecam2;
 
 using MenuAPI;
 
 using Newtonsoft.Json;
 
-using vMenuClient.data;
 using vMenuClient.MenuAPIWrapper;
 using vMenuClient.menus;
 
@@ -861,10 +857,13 @@ namespace vMenuClient
         {
             if (data.Usersettings.UsersettingsSpecs.Count > 0)
             {
-                UsersettingsMenu = new menus.Usersettings();
+                UsersettingsMenu = new Usersettings();
                 var usersettingsMenu = UsersettingsMenu.GetMenu().Menu;
 
-                Menu.AddSubmenu(usersettingsMenu, data.Usersettings.UsersettingsMenuDescription);
+                if (usersettingsMenu.GetMenuItems().Count > 0)
+                {
+                    Menu.AddSubmenu(usersettingsMenu, data.Usersettings.UsersettingsMenuDescription);
+                }
             }
 
             #region Submenu Creation

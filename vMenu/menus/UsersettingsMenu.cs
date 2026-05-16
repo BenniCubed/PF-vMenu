@@ -4,11 +4,10 @@ using static vMenuClient.data.Usersettings;
 
 using vMenuClient.MenuAPIWrapper;
 
-using CitizenFX.Core;
-
 using System.Linq;
 using System.Collections.Generic;
-using System;
+
+using vMenuShared;
 
 namespace vMenuClient.menus
 {
@@ -96,6 +95,12 @@ namespace vMenuClient.menus
 
             foreach (var spec in UsersettingsSpecs)
             {
+                var permission = spec.permission;
+                if (!string.IsNullOrEmpty(permission) && !PermissionsManager.IsAllowed(permission))
+                {
+                    continue;
+                }
+
                 WMenuItem item = null;
                 var setting = UsersettingsDict[spec.key];
 
