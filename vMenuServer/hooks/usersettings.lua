@@ -69,17 +69,21 @@
 --- @field key string               -- The key of the usersetting (for storage and update events)
 --- @field name string              -- The (display) name of the usersetting
 --- @field description string       -- The (display) description of the usersetting
---- @field permission string        -- The permission (see playerPermissions.lua) the user needs to access this setting
+--- @field permission string        -- Only players with this permission will see the resulting usersetting
 --- @field type UsersettingSpecType -- The type of the usersetting, determines the concrete spec below
 --- @field spec (UsersettingListSpec | UsersettingRangeSpec | UsersettingToggleSpec) -- Concrete usersetting spec, based
 ---                                                                                  -- on the type above
 
---- @alias UsersettingsSpecs UsersettingSpec[] -- The list of usersetting specs (in the order they will be displayed)
+--- A list of usersetting menu item specs, each of which can either be a usersetting spec or spec for a submenu
+--- @alias UsersettingsMenuItemSpecs (UsersettingSpec|UsersettingsMenuSpec)[]
 
---- @class UsersettingsInfo
+--- @class UsersettingsMenuSpec
 --- @field menuName string         -- Display name of the usersettings menu
 --- @field menuDescription string  -- Description of the usersettings menu
---- @field specs UsersettingsSpecs -- The list of usersetting specs (in the order they will be displayed)
+--- @field permission string       -- Only players with this permission will see the resulting usersetting (sub)menu
+--- @field specs UsersettingsMenuItemSpecs -- The usersettings menu item specs in the order they will be displayed
+
+--- @alias UsersettingsInfo UsersettingsMenuSpec
 
 --- @alias PlayerSrc string  -- Player handle (as a string)
 --- @alias SettingKey string -- Key of a usersetting (corresponds to a concrete UsersettingSpec.key)
@@ -94,11 +98,16 @@ local function getLicense(playerSrc)
     return GetPlayerIdentifierByType(playerSrc, "license")
 end
 
-local function getUsersettingsColumns(specs)
-    local columns = {}
+local function getUsersettingsColumns(specs, columns)
+    columns = columns or {}
+
     for _, spec in ipairs(specs) do
-        table.insert(columns, spec.key)
-        columns[spec.key] = true
+        if spec.menuName ~= nil then
+            getUsersettingsColumns(spec.specs, columns)
+        else
+            table.insert(columns, spec.key)
+            columns[spec.key] = true
+        end
     end
     return columns
 end

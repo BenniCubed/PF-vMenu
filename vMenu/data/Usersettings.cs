@@ -313,18 +313,14 @@ namespace vMenuClient.data
             }
         }
 
-        class UsersettingsInfo
+        public class UsersettingsMenuSpec
         {
-            public string menuName = "User Settings";
-            public string menuDescription = "User Settings";
-            public List<UsersettingSpec> specs = new List<UsersettingSpec>();
+            public string menuName = "";
+            public string menuDescription = "";
+            public string permission = "";
+            public List<JToken> specs = new();
+            public List<object> deserializedSpecs = new();
         }
-
-        public static string UsersettingsMenuName { get; private set; } = "User Settings";
-        public static string UsersettingsMenuDescription { get; private set; } = "User Settings";
-
-        public static List<UsersettingSpec> UsersettingsSpecs { get; private set; }
-            = new List<UsersettingSpec>();
 
         public static Dictionary<string, UsersettingSpec> UsersettingsSpecsDict { get; private set; }
             = new Dictionary<string, UsersettingSpec>();
@@ -332,36 +328,85 @@ namespace vMenuClient.data
         public static Dictionary<string, object> UsersettingsDict { get; private set; }
             = new Dictionary<string, object>();
 
+        public static UsersettingsMenuSpec MenuSpec { get; private set; } = null;
+
+        public static object ConvertToMenuItemSpec(JToken spec)
+        {
+            try
+            {
+                var menuSpec = spec.ToObject<UsersettingsMenuSpec>();
+                if (!string.IsNullOrEmpty(menuSpec.menuName))
+                {
+                    return menuSpec;
+                }
+            }
+            catch
+            {
+            }
+
+            try
+            {
+                return spec.ToObject<UsersettingSpec>();
+            }
+            catch
+            {
+            }
+
+            return null;
+        }
+
+        public static void InitUsersettingsInfo(UsersettingsMenuSpec usersettingsMenu)
+        {
+            foreach (var jtokenSpec in usersettingsMenu.specs)
+            {
+                var specObj = ConvertToMenuItemSpec(jtokenSpec);
+                if (specObj == null)
+                {
+                    Debug.WriteLine($"[ERROR] Invalid usersetting menu item spec {jtokenSpec}");
+                    continue;
+                }
+
+                usersettingsMenu.deserializedSpecs.Add(specObj);
+
+                var submenuSpec = specObj as UsersettingsMenuSpec;
+                var usersettingSpec = specObj as UsersettingSpec;
+
+                if (submenuSpec != null)
+                {
+                    InitUsersettingsInfo(submenuSpec);
+                }
+                else if (usersettingSpec != null)
+                {
+                    var key = usersettingSpec.key;
+
+                    if (UsersettingsSpecsDict.ContainsKey(key))
+                    {
+                        Debug.WriteLine($"[ERROR] Usersetting spec with duplicate key \"{key}\"");
+                        continue;
+                    }
+
+                    if (!usersettingSpec.DeserializeSpec() || !usersettingSpec.Verify())
+                    {
+                        continue;
+                    }
+
+                    UsersettingsSpecsDict.Add(key, usersettingSpec);
+                    UsersettingsDict.Add(key, usersettingSpec.DefaultValue());
+                }
+                else
+                {
+                    Debug.WriteLine($"[ERROR] Unknown usersetting menu item spec");
+                }
+            }
+        }
+
         public static void InitUsersettingsInfo(string usersettingsInfoJson)
         {
             if (string.IsNullOrEmpty(usersettingsInfoJson))
                 return;
 
-            var info = JsonConvert.DeserializeObject<UsersettingsInfo>(usersettingsInfoJson);
-
-            UsersettingsMenuName = info.menuName;
-            UsersettingsMenuDescription = info.menuDescription;
-
-            var specs = info.specs;
-            foreach (var spec in specs)
-            {
-                var key = spec.key;
-
-                if (UsersettingsSpecsDict.ContainsKey(key))
-                {
-                    Debug.WriteLine($"[WARNING] Usersetting spec with duplicate key \"{key}\"");
-                    continue;
-                }
-
-                if (!spec.DeserializeSpec() || !spec.Verify())
-                {
-                    continue;
-                }
-
-                UsersettingsSpecsDict.Add(key, spec);
-                UsersettingsSpecs.Add(spec);
-                UsersettingsDict.Add(key, spec.DefaultValue());
-            }
+            MenuSpec = JsonConvert.DeserializeObject<UsersettingsMenuSpec>(usersettingsInfoJson);
+            InitUsersettingsInfo(MenuSpec);
         }
 
         public static void InitUsersettings(string usersettingsJson)
@@ -388,7 +433,7 @@ namespace vMenuClient.data
 
                 if (value != null && !spec.IsValidValue(value))
                 {
-                    Debug.WriteLine($"[WARNING] Invalid value \"{value}\" for usersetting \"{key}\"");
+                    Debug.WriteLine($"[ERROR] Invalid value \"{value}\" for usersetting \"{key}\"");
                     value = spec.DefaultValue();
                 }
                 else if (value == null)

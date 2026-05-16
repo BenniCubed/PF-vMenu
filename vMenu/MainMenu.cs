@@ -849,22 +849,33 @@ namespace vMenuClient
             }
         }
 
+        private static void CreateUsersettingsMenu()
+        {
+            var menuSpec = data.Usersettings.MenuSpec;
+
+            if (menuSpec == null || menuSpec.deserializedSpecs.Count == 0)
+            {
+                return;
+            }
+
+            UsersettingsMenu = new Usersettings();
+            var usersettingsMenu = UsersettingsMenu.GetMenu().Menu;
+
+            if (usersettingsMenu.GetMenuItems().Count == 0)
+            {
+                return;
+            }
+
+            Menu.AddSubmenu(usersettingsMenu, menuSpec.menuDescription);
+        }
+
         #region Create Submenus
         /// <summary>
         /// Creates all the submenus depending on the permissions of the user.
         /// </summary>
         private static void CreateSubmenus()
         {
-            if (data.Usersettings.UsersettingsSpecs.Count > 0)
-            {
-                UsersettingsMenu = new Usersettings();
-                var usersettingsMenu = UsersettingsMenu.GetMenu().Menu;
-
-                if (usersettingsMenu.GetMenuItems().Count > 0)
-                {
-                    Menu.AddSubmenu(usersettingsMenu, data.Usersettings.UsersettingsMenuDescription);
-                }
-            }
+            CreateUsersettingsMenu();
 
             #region Submenu Creation
             if (IsAllowed(Permission.VSMenu))

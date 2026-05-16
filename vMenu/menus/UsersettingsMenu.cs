@@ -9,6 +9,8 @@ using System.Collections.Generic;
 
 using vMenuShared;
 
+using CitizenFX.Core;
+
 namespace vMenuClient.menus
 {
     public class Usersettings
@@ -89,37 +91,56 @@ namespace vMenuClient.menus
             return menuItem;
         }
 
-        private void CreateMenu()
+        private WMenu CreateMenu(UsersettingsMenuSpec menuSpec)
         {
-            menu = new WMenu(CommonFunctions.MenuTitle, UsersettingsMenuName);
+            var menu = new WMenu(CommonFunctions.MenuTitle, menuSpec.menuName);
 
-            foreach (var spec in UsersettingsSpecs)
+            foreach (var spec in menuSpec.deserializedSpecs)
             {
-                var permission = spec.permission;
+                var submenuSpec = spec as UsersettingsMenuSpec;
+                var usersettingSpec = spec as UsersettingSpec;
+
+                var permission = submenuSpec != null
+                    ? submenuSpec.permission
+                    : usersettingSpec.permission;
                 if (!string.IsNullOrEmpty(permission) && !PermissionsManager.IsAllowed(permission))
                 {
                     continue;
                 }
 
-                WMenuItem item = null;
-                var setting = UsersettingsDict[spec.key];
+                if (submenuSpec != null)
+                {
+                    var submenu = CreateMenu(submenuSpec);
+                    menu.AddSubmenu(submenu, submenuSpec.menuDescription ?? "");
+                }
+                else if (usersettingSpec != null)
+                {
+                    WMenuItem item = null;
+                    var setting = UsersettingsDict[usersettingSpec.key];
 
-                spec.Visit(
-                    _ => item = CreateListSpecItem(spec, setting),
-                    _ => item = CreateRangeSpecItem(spec, (int)setting),
-                    _ => item = CreateToggleSpecItem(spec, (bool)setting));
+                    usersettingSpec.Visit(
+                        _ => item = CreateListSpecItem(usersettingSpec, setting),
+                        _ => item = CreateRangeSpecItem(usersettingSpec, (int)setting),
+                        _ => item = CreateToggleSpecItem(usersettingSpec, (bool)setting));
 
-                item.ItemData = spec;
-                usersettingItems.Add(spec.key, item);
-                menu.AddItem(item);
+                    item.ItemData = spec;
+                    usersettingItems.Add(usersettingSpec.key, item);
+                    menu.AddItem(item);
+                }
+                else
+                {
+                    Debug.WriteLine($"[ERROR] Unknown usersetting menu item spec");
+                }
             }
+
+            return menu;
         }
 
         public WMenu GetMenu()
         {
             if (menu == null)
             {
-                CreateMenu();
+                menu = CreateMenu(MenuSpec);
             }
             return menu;
         }
