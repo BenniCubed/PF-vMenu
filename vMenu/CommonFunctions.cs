@@ -1881,28 +1881,28 @@ namespace vMenuClient
         /// </summary>
         public struct VehicleInfo
         {
-            public Dictionary<string, int> colors;
-            public bool customWheels;
-            public Dictionary<int, bool> extras;
-            public int livery;
-            public uint model;
-            public Dictionary<int, int> mods;
-            public string name;
-            public bool neonBack;
-            public bool neonFront;
-            public bool neonLeft;
-            public bool neonRight;
-            public string plateText;
-            public int plateStyle;
-            public bool turbo;
-            public bool tyreSmoke;
-            public int version;
-            public int wheelType;
-            public int windowTint;
-            public bool xenonHeadlights;
-            public bool bulletProofTires;
-            public int headlightColor;
-            public float enveffScale;
+            public Dictionary<string, int> colors { get; set; }
+            public bool customWheels { get; set; }
+            public Dictionary<int, bool> extras { get; set; }
+            public int livery { get; set; }
+            public uint model { get; set; }
+            public Dictionary<int, int> mods { get; set; }
+            public string name { get; set; }
+            public bool neonBack { get; set; }
+            public bool neonFront { get; set; }
+            public bool neonLeft { get; set; }
+            public bool neonRight { get; set; }
+            public string plateText { get; set; }
+            public int plateStyle { get; set; }
+            public bool turbo { get; set; }
+            public bool tyreSmoke { get; set; }
+            public int version { get; set; }
+            public int wheelType { get; set; }
+            public int windowTint { get; set; }
+            public bool xenonHeadlights { get; set; }
+            public bool bulletProofTires { get; set; }
+            public int headlightColor { get; set; }
+            public float enveffScale { get; set; }
         };
         #endregion
 
