@@ -178,6 +178,73 @@ namespace vMenuClient.data
             }
         }
 
+        public class UsersettingTextSpec
+        {
+            public int minTextLength = 0;
+            public int maxTextLength = 30;
+            public bool trimInput = false;
+            public string defaultText = "";
+
+            public bool IsValidValue(object value)
+            {
+                var normalizedValue = NormalizeValue(value);
+                return normalizedValue != null
+                    && normalizedValue.Length >= minTextLength
+                    && normalizedValue.Length <= maxTextLength;
+            }
+
+            public string NormalizeValue(object value)
+            {
+                var strValue = value as string;
+                if (strValue == null)
+                {
+                    return null;
+                }
+
+                return trimInput ? strValue.Trim() : strValue;
+            }
+
+            public bool Verify(string key)
+            {
+                var writeError = (string error) =>
+                {
+                    Debug.WriteLine($"Invalid text spec for usersetting \"{key}\": {error}");
+                };
+
+                if (minTextLength < 0)
+                {
+                    writeError("minTextLength < 0");
+                    return false;
+                }
+
+                if (minTextLength > maxTextLength)
+                {
+                    writeError("minTextLength > maxTextLength");
+                    return false;
+                }
+
+                if (maxTextLength > 120)
+                {
+                    writeError("maxTextLength > 120");
+                    return false;
+                }
+
+                defaultText = NormalizeValue(defaultText);
+                if (defaultText == null)
+                {
+                    writeError("defaultText == null");
+                    return false;
+                }
+
+                if (!IsValidValue(defaultText))
+                {
+                    writeError($"invalid defaultText \"{defaultText}\"");
+                }
+
+                return true;
+            }
+        }
+
         public class UsersettingToggleSpec
         {
             public bool defaultState = false;
@@ -210,11 +277,13 @@ namespace vMenuClient.data
 
             public UsersettingListSpec listSpec;
             public UsersettingRangeSpec rangeSpec;
+            public UsersettingTextSpec textSpec;
             public UsersettingToggleSpec toggleSpec;
 
             public void Visit(
                 Action<UsersettingListSpec> listSpecAction,
                 Action<UsersettingRangeSpec> rangeSpecAction,
+                Action<UsersettingTextSpec> textSpecAction,
                 Action<UsersettingToggleSpec> toggleSpecAction)
             {
                 switch (type)
@@ -224,6 +293,9 @@ namespace vMenuClient.data
                         break;
                     case "range":
                         rangeSpecAction(rangeSpec);
+                        break;
+                    case "text":
+                        textSpecAction(textSpec);
                         break;
                     case "toggle":
                         toggleSpecAction(toggleSpec);
@@ -240,6 +312,7 @@ namespace vMenuClient.data
                     Visit(
                         _ => listSpec = spec.ToObject<UsersettingListSpec>(),
                         _ => rangeSpec = spec.ToObject<UsersettingRangeSpec>(),
+                        _ => textSpec = spec.ToObject<UsersettingTextSpec>(),
                         _ => toggleSpec = spec.ToObject<UsersettingToggleSpec>());
                 }
                 catch (InvalidOperationException e)
@@ -257,6 +330,7 @@ namespace vMenuClient.data
                 Visit(
                     s => verified = s.Verify(key),
                     s => verified = s.Verify(key),
+                    s => verified = s.Verify(key),
                     s => verified = s.Verify(key));
 
                 return verified;
@@ -271,6 +345,7 @@ namespace vMenuClient.data
 
                 var isValidValue = false;
                 Visit(
+                    s => isValidValue = s.IsValidValue(value),
                     s => isValidValue = s.IsValidValue(value),
                     s => isValidValue = s.IsValidValue(value),
                     s => isValidValue = s.IsValidValue(value));
@@ -291,6 +366,7 @@ namespace vMenuClient.data
                     Visit(
                         s => normalizedValue = s.NormalizeValue(value),
                         s => normalizedValue = s.NormalizeValue(value),
+                        s => normalizedValue = s.NormalizeValue(value),
                         s => normalizedValue = s.NormalizeValue(value)
                     );
                     return normalizedValue;
@@ -307,6 +383,7 @@ namespace vMenuClient.data
                 Visit(
                     s => value = s.defaultKey,
                     s => value = s.defaultValue,
+                    s => value = s.defaultText,
                     s => value = s.defaultState);
 
                 return value;

@@ -82,6 +82,25 @@ namespace vMenuClient
             SendNuiMessage(JsonConvert.SerializeObject(new { type = "copyToClipboard", text }));
         }
 
+        public static string ShortenLabelText(string itemText, string labelText)
+        {
+            var labelMaxLen = Math.Max(42 - 2 - itemText.Length, 0);
+            if (labelText.Length <= labelMaxLen)
+            {
+                // nothing to do
+            }
+            else if (labelMaxLen >= 3)
+            {
+                labelText = labelText.Substring(0, labelMaxLen - 2).TrimEnd([' ', '-', '/', '(']) + "..";
+            }
+            else
+            {
+                labelText = null;
+            }
+
+            return labelText;
+        }
+
         #region menu position
         public static bool RightAlignMenus() => UserDefaults.MiscRightAlignMenu;
         #endregion

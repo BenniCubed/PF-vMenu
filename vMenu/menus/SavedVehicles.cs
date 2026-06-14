@@ -226,20 +226,7 @@ namespace vMenuClient.menus
             var manufacturerDescr = vi.Manufacturer != "NULL" ? $"~b~{vi.Manufacturer}~s~ " : "";
             var description = $"Spawn your {manufacturerDescr}~b~{vi.Name}~s~: ~b~{name}~s~.";
 
-            var labelMaxLen = Math.Max(42 - 2 - text.Length, 0);
-            string label;
-            if (vi.Name.Length <= labelMaxLen)
-            {
-                label = vi.Name;
-            }
-            else if (labelMaxLen >= 3)
-            {
-                label = vi.Name.Substring(0, labelMaxLen - 2).TrimEnd([' ', '-', '/', '(']) + "..";
-            }
-            else
-            {
-                label = null;
-            }
+            string label = ShortenLabelText(text, vi.Name);
 
             var btn = new MenuItem(text, description)
             {

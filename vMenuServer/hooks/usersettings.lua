@@ -40,6 +40,7 @@
 --- @alias UsersettingSpecType
 --- | '"list"'
 --- | '"range"'
+--- | '"text"'
 --- | '"toggle"'
 
 --- @alias UsersettingListSpecItemKey (boolean | number | string )
@@ -60,6 +61,13 @@
 --- @field end integer          -- The last value in the range (inclusive, must be reachable from begin based on step)
 --- @field step integer         -- The step size (>= 1)
 --- @field defaultValue integer -- The default value (if none is stored yet)
+
+--- UsersettingSpec.spec class for UsersettingSpec.type == "text"
+--- @class UsersettingTextSpec
+--- @field minTextLength integer -- Minimum length of text
+--- @field maxTextLength integer -- Maximum length of text
+--- @field trimInput boolean     -- Trim whitespace from the start and end of the input?
+--- @field defaultText string    -- The default text (if none is stored yet)
 
 --- UsersettingSpec.spec class for UsersettingSpec.type == "toggle"
 --- @class UsersettingToggleSpec
