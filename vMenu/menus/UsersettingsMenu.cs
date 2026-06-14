@@ -1,5 +1,6 @@
 using MenuAPI;
 
+using static vMenuClient.CommonFunctions;
 using static vMenuClient.data.Usersettings;
 
 using vMenuClient.MenuAPIWrapper;
@@ -29,6 +30,11 @@ namespace vMenuClient.menus
             spec.Visit(
                 s => item.AsListItem().ListIndex = s.GetKeyIndex(value),
                 s => item.AsListItem().ListIndex = s.GetValueIndex((int)value),
+                s =>
+                {
+                    var label = ShortenLabelText(item.Text, (string)value);
+                    item.Label = label != null ? $"~c~{label}~s~" : "";
+                },
                 s => item.AsCheckboxItem().Checked = (bool)value);
         }
 
@@ -78,6 +84,54 @@ namespace vMenuClient.menus
             return menuItem;
         }
 
+        private WMenuItem CreateTextSpecItem(UsersettingSpec spec, string initialText)
+        {
+            var textSpec = spec.textSpec;
+
+            var menuItem = new MenuItem(spec.name, spec.description)
+            {
+                Label = initialText != null ? $"~c~{initialText}~s~" : "",
+            }.ToWrapped();
+            menuItem.Selected += async (_, e) =>
+            {
+                UsersettingsDict.TryGetValue(spec.key, out var value);
+                var input = await GetUserInput(
+                    spec.name,
+                    value as string ?? "",
+                    textSpec.maxTextLength);
+                if (input == null)
+                {
+                    Notify.Error("input canceled");
+                    return;
+                }
+
+                var trimmedInfo = "";
+                if (textSpec.trimInput)
+                {
+                    input = input.Trim();
+                    trimmedInfo = "trimmed ";
+                }
+
+                if (input.Length < textSpec.minTextLength)
+                {
+                    Notify.Error($"{trimmedInfo}input must have at least {textSpec.minTextLength} characters");
+                    return;
+                }
+                if (input.Length > textSpec.maxTextLength)
+                {
+                    Notify.Error($"{trimmedInfo}input must have at most {textSpec.maxTextLength} characters");
+                    return;
+                }
+
+                var label = ShortenLabelText(spec.name, input);
+
+                menuItem.Label = input != null ? $"~c~{input}~s~" : "";
+                UpdateUsersetting(spec.key, input);
+            };
+
+            return menuItem;
+        }
+
         private WMenuItem CreateToggleSpecItem(UsersettingSpec spec, bool initialState)
         {
             var toggleSpec = spec.toggleSpec;
@@ -93,7 +147,7 @@ namespace vMenuClient.menus
 
         private WMenu CreateMenu(UsersettingsMenuSpec menuSpec)
         {
-            var menu = new WMenu(CommonFunctions.MenuTitle, menuSpec.menuName);
+            var menu = new WMenu(MenuTitle, menuSpec.menuName);
 
             foreach (var spec in menuSpec.deserializedSpecs)
             {
@@ -121,6 +175,7 @@ namespace vMenuClient.menus
                     usersettingSpec.Visit(
                         _ => item = CreateListSpecItem(usersettingSpec, setting),
                         _ => item = CreateRangeSpecItem(usersettingSpec, (int)setting),
+                        _ => item = CreateTextSpecItem(usersettingSpec, (string)setting),
                         _ => item = CreateToggleSpecItem(usersettingSpec, (bool)setting));
 
                     item.ItemData = spec;
