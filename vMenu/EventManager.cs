@@ -394,7 +394,7 @@ namespace vMenuClient
 
             if (player != null)
             {
-                _ = TeleportToPlayer(player);
+                await TeleportToPlayer(player);
             }
         }
 
