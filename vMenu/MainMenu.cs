@@ -27,6 +27,8 @@ namespace vMenuClient
         public static bool PermissionsSetupComplete => ArePermissionsSetup;
         public static bool ConfigOptionsSetupComplete = false;
 
+        public static Dictionary<string, string> MenuText { get; private set; } = new();
+
         public static string NoClipKey { get; private set; } = "F2"; // F2 by default (ReplayStartStopRecordingSecondary)
         public static WMenu Menu { get; private set; }
         public static WMenu PlayerSubmenu { get; private set; }
@@ -124,6 +126,9 @@ namespace vMenuClient
         /// </summary>
         public MainMenu()
         {
+            var menuTextJson = LoadResourceFile(GetCurrentResourceName(), "config/menu-text.json");
+            MenuText = JsonConvert.DeserializeObject<Dictionary<string, string>>(menuTextJson);
+
             PlayersList = new NativePlayerList(Players);
 
             // Get the languages.

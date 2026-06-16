@@ -199,7 +199,9 @@ namespace vMenuClient.menus
             WMenuItem saveAsDefaultMod = null;
             if (available && IsAllowed(Permission.VOSaveMods))
             {
-                saveAsDefaultMod = WMenuItem.CreateConfirmationButton("Save Modifications As Default", "Save this saved vehicle's modifications as its model's default. They will be applied when you spawn the model through the ~b~Spawn Vehicles~s~ menu again. ~y~This will override any existing saved default modifications!~s~");
+                saveAsDefaultMod = WMenuItem.CreateConfirmationButton(
+                    MainMenu.MenuText["SAVED_VEHICLES__SAVE_AS_DEFAULT_MODS__ITEM"],
+                    MainMenu.MenuText["SAVED_VEHICLES__SAVE_AS_DEFAULT_MODS__DESC"]);
                 saveAsDefaultMod.Confirmed += (_s, _args) =>
                 {
                     StorageManager.SaveVehicleMods(selectedVehicle.Item3.Shortname, selectedVehicle.Item2);

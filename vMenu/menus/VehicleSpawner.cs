@@ -509,7 +509,10 @@ namespace vMenuClient.menus
 
                 var spawnInVeh = new MenuCheckboxItem("Spawn Inside Vehicle", "If enabled, you will automatically spawn into the spawned vehicles.", SpawnInVehicle);
                 var replacePrev = new MenuCheckboxItem("Replace Previous Vehicle", "If enabled, the newly spawned vehicle will replace your old one.", ReplaceVehicle);
-                var spawnWithSavedMods = new MenuCheckboxItem("Spawn With Saved Mods", "If enabled and you have custom mods for the vehicle saved, they will be applied to the spawned vehicle.", SpawnWithSavedMods);
+                var spawnWithSavedMods = new MenuCheckboxItem(
+                    MainMenu.MenuText["VEHICLE_SPAWNER__SPAWN_WITH_DEFAULT_MODS__ITEM"],
+                    MainMenu.MenuText["VEHICLE_SPAWNER__SPAWN_WITH_DEFAULT_MODS__DESC"],
+                    SpawnWithSavedMods);
                 var spawnUpgraded = new MenuCheckboxItem("Spawn Upgraded Vehicle", "If enabled and you don't have custom mods for the vehicle, performance upgrades will be applied to the spawned vehicle.", SpawnUpgraded);
                 var spawnDestructible = new MenuCheckboxItem("Spawn Traffic-Style Vehicle", "If enabled, spawned vehicles can despawn when too far away and explode on impact.", SpawnDestructible);
 

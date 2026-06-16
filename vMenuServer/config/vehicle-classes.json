@@ -1,7 +1,0 @@
-// Leave this array empty or delete the file to disable custom vehicle classes
-[
-    {"builtin": "super"},
-    {"builtin": "sports"},
-    {"name": "Prototype", "vehicles": ["lm87", "le7b", "s80"]},
-    {"name": "Rocket", "vehicles": ["scramjet", "vigilante", "voltic2"]}
-]

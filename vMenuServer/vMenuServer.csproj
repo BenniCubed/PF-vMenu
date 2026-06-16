@@ -64,6 +64,9 @@
     <None Update="config\help.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="config\menu-text.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="config\about.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

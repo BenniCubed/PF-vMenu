@@ -1,0 +1,11 @@
+{
+    "SAVED_VEHICLES__SAVE_AS_DEFAULT_MODS__ITEM": "Save Modifications As Default",
+    "SAVED_VEHICLES__SAVE_AS_DEFAULT_MODS__DESC": "Save this saved vehicle's modifications as its model's default. They will be applied when you spawn the model through the ~b~Spawn Vehicles~s~ menu again. ~y~This will override any existing saved default modifications!~s~",
+    "VEHICLE_CUSTOMIZATION__DELETE_DEFAULT_MODS__ITEM": "~r~Delete Default Modifications~s~",
+    "VEHICLE_CUSTOMIZATION__DELETE_DEFAULT_MODS__DESC": "Delete the saved default modifications for your vehicle's model. ~y~This cannot be undone!~s~",
+    "VEHICLE_CUSTOMIZATION__SAVE_AS_DEFAULT_MODS__ITEM": "Save Modifications As Default",
+    "VEHICLE_CUSTOMIZATION__SAVE_AS_DEFAULT_MODS__DESC": "Save your vehicle's modifications as the model's default. They will be applied when you spawn the model again. ~y~This will override any existing saved default modifications!~s~",
+    "VEHICLE_SPAWNER__SPAWN_WITH_DEFAULT_MODS__ITEM": "Spawn With Default Mods",
+    "VEHICLE_SPAWNER__SPAWN_WITH_DEFAULT_MODS__DESC": "If enabled and you have default mods for the vehicle saved, they will be applied to the spawned vehicle.",
+    "__LAST__": ""
+}
