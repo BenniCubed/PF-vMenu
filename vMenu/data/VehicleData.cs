@@ -753,12 +753,20 @@ namespace vMenuClient.data
             compareVehicleClassDict[i1].CompareTo(compareVehicleClassDict[i2]);
 
 
+        public enum VehicleFilterFilterDefaultMods
+        {
+            All,
+            With,
+            Without,
+        };
+
         public struct VehicleFilter
         {
             public string Name;
             public string Manufacturer;
             public string CustomClass;
             public string RockstarClass;
+            public VehicleFilterFilterDefaultMods FilterDefaultMods;
 
             private bool IsNameMatching(VehicleModelInfo info, string name)
             {
@@ -795,12 +803,24 @@ namespace vMenuClient.data
                 return info.ClassName == RockstarClass;
             }
 
+            private bool IsDefaultModsMatching(VehicleModelInfo info)
+            {
+                if (FilterDefaultMods == VehicleFilterFilterDefaultMods.All)
+                {
+                    return true;
+                }
+                return StorageManager.TryGetSavedVehicleMods(info.Shortname) != null
+                    ? FilterDefaultMods == VehicleFilterFilterDefaultMods.With
+                    : FilterDefaultMods == VehicleFilterFilterDefaultMods.Without;
+            }
+
             public bool IsMatching(VehicleModelInfo info, string name = null) =>
                 info != null &&
                 IsNameMatching(info, name) &&
                 IsManufacturerMatching(info) &&
                 IsCustomClassMatching(info) &&
-                IsRockstarClassMatching(info);
+                IsRockstarClassMatching(info) &&
+                IsDefaultModsMatching(info);
         }
     }
 }

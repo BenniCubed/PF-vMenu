@@ -39,8 +39,12 @@ namespace vMenuClient.menus
             public WMenuItem Manufacturer;
             public WMenuItem CustomClass;
             public WMenuItem DefaultClass;
+            public WMenuItem DefaultMods;
 
-            public int Count => 2 + (CustomClass != null ? 1 : 0) + (DefaultClass != null ? 1 : 0);
+            public int Count => 2
+                + (CustomClass != null ? 1 : 0)
+                + (DefaultClass != null ? 1 : 0)
+                + (DefaultMods != null ? 1 : 0);
         }
 
         private bool searchingByName = false;
@@ -64,6 +68,10 @@ namespace vMenuClient.menus
             if (filterItems.DefaultClass != null)
             {
                 filterItems.DefaultClass.AsListItem().ListIndex = 0;
+            }
+            if (filterItems.DefaultMods != null)
+            {
+                filterItems.DefaultMods.AsListItem().ListIndex = 0;
             }
         }
 
@@ -272,7 +280,11 @@ namespace vMenuClient.menus
             filter = new VehicleData.VehicleFilter();
             filterItems = new FilterItems();
 
+            int currentFilterItemIndex = 0;
+
             {
+                var filterItemIndex = currentFilterItemIndex++;
+
                 var nameFilter = new MenuItem("~b~Filter By Name~s~", "Filter vehicles by (model) name or reset the filter.").ToWrapped();
                 nameFilter.Selected += async (_s, _args) =>
                 {
@@ -282,15 +294,16 @@ namespace vMenuClient.menus
 
                     filter.Name = input;
                     FilterAvailableSavedVehiclesMenu();
-                    vehiclesMenu.Menu.RefreshIndex(0);
+                    vehiclesMenu.Menu.RefreshIndex(filterItemIndex);
                 };
 
                 vehiclesMenu.AddItem(nameFilter);
                 filterItems.Name = nameFilter;
             }
 
-
             {
+                var filterItemIndex = currentFilterItemIndex++;
+
                 var manufacturers = VehicleData.AllowedVehicles
                     .Select(veh => veh.Manufacturer)
                     .Distinct()
@@ -315,7 +328,7 @@ namespace vMenuClient.menus
                     }
 
                     FilterAvailableSavedVehiclesMenu();
-                    vehiclesMenu.Menu.RefreshIndex(1);
+                    vehiclesMenu.Menu.RefreshIndex(filterItemIndex);
                 };
                 manufacturerFilter.ListSelected += (_s, _args) =>
                 {
@@ -323,13 +336,12 @@ namespace vMenuClient.menus
                     filter.Manufacturer = null;
 
                     FilterAvailableSavedVehiclesMenu();
-                    vehiclesMenu.Menu.RefreshIndex(1);
+                    vehiclesMenu.Menu.RefreshIndex(filterItemIndex);
                 };
 
                 vehiclesMenu.AddItem(manufacturerFilter);
                 filterItems.Manufacturer = manufacturerFilter;
             }
-
 
             bool customClassesOnly = GetSettingsBool(Setting.vmenu_only_custom_classes);
 
@@ -338,6 +350,8 @@ namespace vMenuClient.menus
                 .ToList();
             if (customClasses.Count > 0)
             {
+                var filterItemIndex = currentFilterItemIndex++;
+
                 var customClassesOptions = Enumerable.Concat(["~italic~All~italic~"], customClasses).ToList();
                 var customClassesFilter = new MenuListItem(
                     $"~b~Filter By {(customClassesOnly ? "" : "Custom ")}Class~s~",
@@ -356,7 +370,7 @@ namespace vMenuClient.menus
                     }
 
                     FilterAvailableSavedVehiclesMenu();
-                    vehiclesMenu.Menu.RefreshIndex(2);
+                    vehiclesMenu.Menu.RefreshIndex(filterItemIndex);
                 };
                 customClassesFilter.ListSelected += (_s, _args) =>
                 {
@@ -364,7 +378,7 @@ namespace vMenuClient.menus
                     filter.CustomClass = null;
 
                     FilterAvailableSavedVehiclesMenu();
-                    vehiclesMenu.Menu.RefreshIndex(2);
+                    vehiclesMenu.Menu.RefreshIndex(filterItemIndex);
                 };
 
                 vehiclesMenu.AddItem(customClassesFilter);
@@ -373,6 +387,8 @@ namespace vMenuClient.menus
 
             if (customClasses.Count == 0 || !customClassesOnly)
             {
+                var filterItemIndex = currentFilterItemIndex++;
+
                 var defaultClasses = VehicleData.AllowedVehicles
                     .Select(veh => veh.Class)
                     .OrderBy(c => c, Comparer<int>.Create(VehicleData.CompareClasses))
@@ -397,7 +413,7 @@ namespace vMenuClient.menus
                     }
 
                     FilterAvailableSavedVehiclesMenu();
-                    vehiclesMenu.Menu.RefreshIndex(2 + (customClasses.Count > 0 ? 1 : 0));
+                    vehiclesMenu.Menu.RefreshIndex(filterItemIndex);
                 };
                 defaultClassesFilter.ListSelected += (_s, _args) =>
                 {
@@ -405,11 +421,42 @@ namespace vMenuClient.menus
                     filter.RockstarClass = null;
 
                     FilterAvailableSavedVehiclesMenu();
-                    vehiclesMenu.Menu.RefreshIndex(2 + (customClasses.Count > 0 ? 1 : 0));
+                    vehiclesMenu.Menu.RefreshIndex(filterItemIndex);
                 };
 
                 vehiclesMenu.AddItem(defaultClassesFilter);
                 filterItems.DefaultClass = defaultClassesFilter;
+            }
+
+            if (IsAllowed(Permission.VOSaveMods))
+            {
+                var filterItemIndex = currentFilterItemIndex++;
+
+                var defaultModsFilter = new MenuListItem(
+                    MainMenu.MenuText["VEHICLES_LIST__DEFAULT_MODS_FILTER__ITEM"],
+                    new List<string> { "~italic~All~italic~", "With", "Without" },
+                    0,
+                    MainMenu.MenuText["VEHICLES_LIST__DEFAULT_MODS_FILTER__DESC"]).ToWrapped();
+                defaultModsFilter.ListChanged += (_, args) =>
+                {
+                    filter.FilterDefaultMods = (VehicleData.VehicleFilterFilterDefaultMods)args.ListIndexNew;
+
+                    FilterAvailableSavedVehiclesMenu();
+                    vehiclesMenu.Menu.RefreshIndex(filterItemIndex);
+                };
+                defaultModsFilter.ListSelected += (_, args) =>
+                {
+                    defaultModsFilter.AsListItem().ListIndex = 0;
+                    filter.FilterDefaultMods = VehicleData.VehicleFilterFilterDefaultMods.All;
+
+                    FilterAvailableSavedVehiclesMenu();
+                    vehiclesMenu.Menu.RefreshIndex(filterItemIndex);
+                };
+
+                vehiclesMenu.AddItem(defaultModsFilter);
+                filterItems.DefaultMods = defaultModsFilter;
+
+                currentFilterItemIndex++;
             }
 
             vehiclesMenu.Menu.InstructionalButtons.Add(Control.SelectWeapon, "Filter Vehicles");
@@ -449,6 +496,7 @@ namespace vMenuClient.menus
 
             menuData.Menu.Opened += (s, args) =>
             {
+                FilterAvailableSavedVehiclesMenu();
                 SetIndexPastFilters(menuData.Menu, filterItems);
             };
 
@@ -458,7 +506,6 @@ namespace vMenuClient.menus
                 if (searchingByName)
                 {
                     ResetAvailableSavedVehiclesFilter();
-                    FilterAvailableSavedVehiclesMenu();
                 }
                 searchingByName = false;
             };

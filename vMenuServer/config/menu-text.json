@@ -7,5 +7,7 @@
     "VEHICLE_CUSTOMIZATION__SAVE_AS_DEFAULT_MODS__DESC": "Save your vehicle's modifications as the model's default. They will be applied when you spawn the model again. ~y~This will override any existing saved default modifications!~s~",
     "VEHICLE_SPAWNER__SPAWN_WITH_DEFAULT_MODS__ITEM": "Spawn With Default Mods",
     "VEHICLE_SPAWNER__SPAWN_WITH_DEFAULT_MODS__DESC": "If enabled and you have default mods for the vehicle saved, they will be applied to the spawned vehicle.",
+    "VEHICLES_LIST__DEFAULT_MODS_FILTER__ITEM": "~b~Filter By Default Mods~s~",
+    "VEHICLES_LIST__DEFAULT_MODS_FILTER__DESC": "Filter vehicles by whether they have default mods or not. Click to reset the filter.",
     "__LAST__": ""
 }
