@@ -49,6 +49,9 @@ namespace vMenuClient.menus
 
         private bool searchingByName = false;
 
+        int prevCount = 0;
+        int prevIndex = 0;
+        int prevOffset = 0;
 
         private SavedVehiclesMenuData availableSavedVehiclesMenuData;
         private VehicleData.VehicleFilter filter;
@@ -496,7 +499,14 @@ namespace vMenuClient.menus
 
             menuData.Menu.Opened += (s, args) =>
             {
+                // Filter on open because vehicles with/without default mods may have changed
                 FilterAvailableSavedVehiclesMenu();
+
+                // Try to restore prev position in menu after filter
+                if (prevCount == menuData.Menu.Count)
+                {
+                    menuData.Menu.Menu.RefreshIndex(prevIndex, prevOffset);
+                }
                 SetIndexPastFilters(menuData.Menu, filterItems);
             };
 
@@ -506,8 +516,12 @@ namespace vMenuClient.menus
                 if (searchingByName)
                 {
                     ResetAvailableSavedVehiclesFilter();
+                    FilterAvailableSavedVehiclesMenu();
                 }
                 searchingByName = false;
+                prevCount = menuData.Menu.Count;
+                prevIndex = menuData.Menu.Menu.CurrentIndex;
+                prevOffset = menuData.Menu.Menu.ViewIndexOffset;
             };
 
             return menuData;

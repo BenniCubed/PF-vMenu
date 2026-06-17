@@ -43,6 +43,9 @@ namespace vMenuClient.menus
 
         private bool searchingByName = false;
 
+        private int prevCount = 0;
+        private int prevIndex = 0;
+        private int prevOffset = 0;
 
         public void ResetAllVehiclesFilter()
         {
@@ -115,11 +118,28 @@ namespace vMenuClient.menus
             return btn;
         }
 
+        private static void ChangeThumbnail(MenuItem item, bool immediately)
+        {
+            if (item == null)
+                return;
+
+            var vi = item.ItemData as VehicleData.VehicleModelInfo;
+            if (vi != null)
+            {
+                MainMenu.VehicleThumbnailDrawer?.SetThumbnail(vi.Shortname, immediately);
+            }
+            else
+            {
+                MainMenu.VehicleThumbnailDrawer?.HideThumbnail();
+            }
+        }
+
         private static void SetIndexPastFilters(WMenu menu, FilterItems filterItems)
         {
             if (menu.Menu.CurrentIndex < filterItems.Count && menu.Count > filterItems.Count)
             {
                 menu.Menu.RefreshIndex(filterItems.Count, 0);
+                ChangeThumbnail(menu.Menu.GetMenuItems()[menu.CurrentIndex], true);
             }
         }
 
@@ -345,32 +365,25 @@ namespace vMenuClient.menus
                 vehiclesMenu.AddItem(btn);
             }
 
-            var changeThumbnail = (MenuItem item, bool immediately) =>
-            {
-                if (item == null)
-                    return;
-
-                var vi = item.ItemData as VehicleData.VehicleModelInfo;
-                if (vi != null)
-                {
-                    MainMenu.VehicleThumbnailDrawer?.SetThumbnail(vi.Shortname, immediately);
-                }
-                else
-                {
-                    MainMenu.VehicleThumbnailDrawer?.HideThumbnail();
-                }
-            };
-
             vehiclesMenu.IndexChanged += (_, args) =>
             {
-                changeThumbnail(args.ItemNew.MenuItem, false);
+                ChangeThumbnail(args.ItemNew.MenuItem, false);
             };
 
             vehiclesMenu.Opened += (s, args) =>
             {
+                // Filter on open because vehicles with/without default mods may have changed
                 FilterAllVehiclesMenu();
+
+                // Try to restore prev position in menu after filter; this will only fail if the number of items changed
+                // due to filtering on default mods and adding/removing default mods
+                if (prevCount == vehiclesMenu.Count)
+                {
+                    vehiclesMenu.Menu.RefreshIndex(prevIndex, prevOffset);
+                }
+
                 SetIndexPastFilters(vehiclesMenu, filterItems);
-                changeThumbnail(vehiclesMenu.Menu.GetCurrentMenuItem(), true);
+                ChangeThumbnail(vehiclesMenu.Menu.GetCurrentMenuItem(), true);
             };
 
             vehiclesMenu.Closed += (_s, _args) =>
@@ -378,8 +391,12 @@ namespace vMenuClient.menus
                 if (searchingByName)
                 {
                     ResetAllVehiclesFilter();
+                    FilterAllVehiclesMenu();
                 }
                 searchingByName = false;
+                prevCount = vehiclesMenu.Count;
+                prevIndex = vehiclesMenu.Menu.CurrentIndex;
+                prevOffset = vehiclesMenu.Menu.ViewIndexOffset;
             };
 
             if (addFilters && IsAllowed(Permission.VOMenu))
