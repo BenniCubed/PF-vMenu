@@ -115,10 +115,11 @@ namespace vMenuClient.menus
             var manageMenu = new WMenu(MenuTitle, "CHANGE_ME");
 
             WMenuItem spawnVehicle = null;
+            WMenuItem spawnAndCustomize = null;
             if (available)
             {
                 spawnVehicle = new MenuItem("Spawn", "Spawn this saved vehicle.").ToWrapped();
-                spawnVehicle.Selected += async (_s, _args) =>
+                var doSpawnVehicle = async () =>
                 {
                     if (MainMenu.VehicleSpawnerMenu != null)
                     {
@@ -147,6 +148,34 @@ namespace vMenuClient.menus
                             withSavedModifications: false);
                     }
                 };
+
+                spawnVehicle.Selected += async (_s, _args) => await doSpawnVehicle();
+
+                if (IsAllowed(Permission.VOMenu))
+                {
+                    spawnAndCustomize = new MenuItem(
+                        "Spawn & Customize",
+                        "Spawn this saved vehicle and then open the customization menu. ~y~You will still need to manually save your changes once you are done modifying.~s~")
+                    .ToWrapped();
+
+                    spawnAndCustomize.Selected += async (_s, _args) =>
+                    {
+                        await doSpawnVehicle();
+
+                        if (MainMenu.VehicleCustomizationMenu == null)
+                        {
+                            return;
+                        }
+
+                        var customizationMenu = MainMenu.VehicleCustomizationMenu.GetMenu();
+                        if (customizationMenu != null)
+                        {
+                            MenuController.AddSubmenu(manageMenu.Menu, customizationMenu);
+                            MenuController.CloseAllMenus();
+                            customizationMenu.OpenMenu();
+                        }
+                    };
+                }
             }
 
             var renameVehicle = new MenuItem("Rename Vehicle", "Rename this saved vehicle.").ToWrapped();
@@ -219,7 +248,7 @@ namespace vMenuClient.menus
                 };
             }
 
-            manageMenu.AddItems([spawnVehicle, renameVehicle, replaceVehicle, deleteVehicle, saveAsDefaultMod]);
+            manageMenu.AddItems([spawnVehicle, spawnAndCustomize, renameVehicle, replaceVehicle, deleteVehicle, saveAsDefaultMod]);
 
             manageMenu.Closed += (_s, _args) =>
             {
