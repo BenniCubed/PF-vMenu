@@ -43,7 +43,6 @@ namespace vMenuClient.menus
 
         private bool searchingByName = false;
 
-        private int prevCount = 0;
         private int prevIndex = 0;
         private int prevOffset = 0;
 
@@ -375,12 +374,11 @@ namespace vMenuClient.menus
                 // Filter on open because vehicles with/without default mods may have changed
                 FilterAllVehiclesMenu();
 
-                // Try to restore prev position in menu after filter; this will only fail if the number of items changed
-                // due to filtering on default mods and adding/removing default mods
-                if (prevCount == vehiclesMenu.Count)
-                {
-                    vehiclesMenu.Menu.RefreshIndex(prevIndex, prevOffset);
-                }
+                // Restore prev position in menu after filter
+                var index = Math.Min(prevIndex, vehiclesMenu.Count - 1);
+                var maxOffset = Math.Max(0, vehiclesMenu.Count - vehiclesMenu.Menu.MaxItemsOnScreen);
+                var offset = Math.Min(prevOffset, maxOffset);
+                vehiclesMenu.Menu.RefreshIndex(index, offset);
 
                 SetIndexPastFilters(vehiclesMenu, filterItems);
                 ChangeThumbnail(vehiclesMenu.Menu.GetCurrentMenuItem(), true);
@@ -394,7 +392,6 @@ namespace vMenuClient.menus
                     FilterAllVehiclesMenu();
                 }
                 searchingByName = false;
-                prevCount = vehiclesMenu.Count;
                 prevIndex = vehiclesMenu.Menu.CurrentIndex;
                 prevOffset = vehiclesMenu.Menu.ViewIndexOffset;
             };

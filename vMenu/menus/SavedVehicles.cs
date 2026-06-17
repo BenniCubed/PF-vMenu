@@ -49,7 +49,6 @@ namespace vMenuClient.menus
 
         private bool searchingByName = false;
 
-        int prevCount = 0;
         int prevIndex = 0;
         int prevOffset = 0;
 
@@ -531,11 +530,12 @@ namespace vMenuClient.menus
                 // Filter on open because vehicles with/without default mods may have changed
                 FilterAvailableSavedVehiclesMenu();
 
-                // Try to restore prev position in menu after filter
-                if (prevCount == menuData.Menu.Count)
-                {
-                    menuData.Menu.Menu.RefreshIndex(prevIndex, prevOffset);
-                }
+                // Restore prev position in menu after filter
+                var index = Math.Min(prevIndex, menuData.Menu.Count - 1);
+                var maxOffset = Math.Max(0, menuData.Menu.Count - menuData.Menu.Menu.MaxItemsOnScreen);
+                var offset = Math.Min(prevOffset, maxOffset);
+                menuData.Menu.Menu.RefreshIndex(index, offset);
+
                 SetIndexPastFilters(menuData.Menu, filterItems);
             };
 
@@ -548,7 +548,6 @@ namespace vMenuClient.menus
                     FilterAvailableSavedVehiclesMenu();
                 }
                 searchingByName = false;
-                prevCount = menuData.Menu.Count;
                 prevIndex = menuData.Menu.Menu.CurrentIndex;
                 prevOffset = menuData.Menu.Menu.ViewIndexOffset;
             };

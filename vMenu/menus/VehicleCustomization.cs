@@ -173,19 +173,31 @@ namespace vMenuClient.menus
             }
 
             var saveModifications = WMenuItem.CreateConfirmationButton(
+                menu,
                 MainMenu.MenuText["VEHICLE_CUSTOMIZATION__SAVE_AS_DEFAULT_MODS__ITEM"],
                 MainMenu.MenuText["VEHICLE_CUSTOMIZATION__SAVE_AS_DEFAULT_MODS__DESC"]);
-            saveModifications.Confirmed += (o, e) =>
+            saveModifications.Confirmed += (_s, e) =>
             {
-                SaveVehicleMods(GetVehicle());
+                var vehicle = TryGetIntactDriverVehicle("do this");
+                if (vehicle == null)
+                {
+                    return;
+                }
+                SaveVehicleMods(vehicle);
             };
 
             var deleteModifications = WMenuItem.CreateConfirmationButton(
+                menu,
                 MainMenu.MenuText["VEHICLE_CUSTOMIZATION__DELETE_DEFAULT_MODS__ITEM"],
                 MainMenu.MenuText["VEHICLE_CUSTOMIZATION__DELETE_DEFAULT_MODS__DESC"]);
-            deleteModifications.Confirmed += (o, e) =>
+            deleteModifications.Confirmed += (_s, e) =>
             {
-                DeleteSavedVehicleMods(GetVehicle());
+                var vehicle = TryGetIntactDriverVehicle("do this");
+                if (vehicle == null)
+                {
+                    return;
+                }
+                DeleteSavedVehicleMods(vehicle);
             };
 
             var licensePlates = new List<string> { plate01, plate02, plate03, plate04, plate05, plate06 };
@@ -280,22 +292,6 @@ namespace vMenuClient.menus
                         if (item == setLicensePlateText)
                         {
                             SetLicensePlateCustomText();
-                        }
-                        else if (item == saveModifications.MenuItem)
-                        {
-                            saveModifications.OnSelected(new WMenuItem.SelectedEventArgs
-                            {
-                                ItemIndex = index,
-                                Item = saveModifications.MenuItem,
-                            });
-                        }
-                        else if (item == deleteModifications.MenuItem)
-                        {
-                            deleteModifications.OnSelected(new WMenuItem.SelectedEventArgs
-                            {
-                                ItemIndex = index,
-                                Item = deleteModifications.MenuItem,
-                            });
                         }
                     }
                 }

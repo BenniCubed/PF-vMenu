@@ -13,7 +13,7 @@ namespace vMenuClient
     {
         public class Section : Tuple<string, IEnumerable<WMenuItem>>
         {
-            public Section(string name, IEnumerable<WMenuItem> items) : base(name, items) {}
+            public Section(string name, IEnumerable<WMenuItem> items) : base(name, items) { }
         }
 
         public static class Extensions
@@ -155,7 +155,7 @@ namespace vMenuClient
                 void Reset()
                 {
                     confirmations = -1;
-                    button.Label = $"~c~{neededConfirmations} Confirm{(neededConfirmations > 1 ? "s": "")}~s~";
+                    button.Label = $"~c~{neededConfirmations} Confirm{(neededConfirmations > 1 ? "s" : "")}~s~";
                 }
 
                 Reset();
@@ -182,6 +182,66 @@ namespace vMenuClient
 
                 button.MenuOpened += (_s, _args) => Reset();
                 button.MenuClosed += (_s, _args) => Reset();
+
+                return button;
+            }
+
+            public static WMenuItem CreateConfirmationButton(Menu menu, string text, string description, int neededConfirmations = 2)
+            {
+                var button = new MenuItem(text, description).ToWrapped();
+
+                int confirmations;
+
+                void Reset()
+                {
+                    confirmations = -1;
+                    button.Label = $"~c~{neededConfirmations} Confirm{(neededConfirmations > 1 ? "s" : "")}~s~";
+                }
+
+                Reset();
+
+                menu.OnItemSelect += (menu, item, index) =>
+                {
+                    if (item != button.MenuItem)
+                    {
+                        return;
+                    }
+
+                    ++confirmations;
+                    if (confirmations == neededConfirmations)
+                    {
+                        button.Confirmed?.Invoke(menu, new SelectedEventArgs
+                        {
+                            Item = item,
+                            ItemIndex = index,
+                        });
+                        Reset();
+                        return;
+                    }
+
+                    var qmarks = Enumerable.Range(0, neededConfirmations - confirmations).Select(_ => "?");
+                    button.Label = $"~o~~h~SURE{string.Join("", qmarks)}~h~~s~";
+                };
+
+                menu.OnIndexChange += (_s, oldItem, newItem, oldIndex, newIndex) =>
+                {
+                    if (oldItem != button.MenuItem)
+                    {
+                        return;
+                    }
+
+                    Reset();
+                };
+
+                menu.OnMenuOpen += (_) =>
+                {
+                    Reset();
+                };
+
+                menu.OnMenuClose += (_) =>
+                {
+                    Reset();
+                };
 
                 return button;
             }
@@ -286,7 +346,7 @@ namespace vMenuClient
                     IndexChanged?.Invoke(this, args);
 
                     var witemOld = itemsDict[itemOld];
-                    var witemNew= itemsDict[itemNew];
+                    var witemNew = itemsDict[itemNew];
 
                     witemOld?.OnMenuIndexChanged(args);
                     witemNew?.OnMenuIndexChanged(args);
