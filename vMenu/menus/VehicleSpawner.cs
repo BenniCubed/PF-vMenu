@@ -382,6 +382,27 @@ namespace vMenuClient.menus
                 searchingByName = false;
             };
 
+            if (addFilters && IsAllowed(Permission.VOMenu))
+            {
+                vehiclesMenu.Menu.InstructionalButtons.Add(Control.LookBehind, "Vehicle Customization");
+                vehiclesMenu.Menu.ButtonPressHandlers.Add(new Menu.ButtonPressHandler(
+                    Control.LookBehind,
+                    Menu.ControlPressCheckType.JUST_RELEASED,
+                    (m, _c) =>
+                    {
+                        if (MainMenu.VehicleCustomizationMenu == null)
+                        {
+                            return;
+                        }
+
+                        var customizationMenu = MainMenu.VehicleCustomizationMenu.GetMenu();
+                        MenuController.AddSubmenu(vehiclesMenu.Menu, customizationMenu);
+                        MenuController.CloseAllMenus();
+                        customizationMenu.OpenMenu();
+                    },
+                    true));
+            }
+
             MainMenu.VehicleThumbnailDrawer?.AddMenu(vehiclesMenu.Menu);
             return vehiclesMenu;
         }
